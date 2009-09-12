@@ -63,9 +63,6 @@ void PSPVideoInit() {
 	sceGuEnable(GU_TEXTURE_2D); // Enables texturing of primitives.
 	sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT); // Clears current drawbuffer
 
-	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
-	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
-
 	sceGuFinish(); // End of command list
 	sceGuSync(0,0); // Wait for list to finish executing
 
@@ -85,8 +82,8 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 	swizzle_fast((u8*)vram_buffer,(const u8*)XBuf,256,256);
 
 	// setup CLUT texture
-//	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
-//	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
+	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
+	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
 	sceGuTexMode(GU_PSM_T8,0,0,GU_TRUE); // 8-bit image
 	sceGuTexImage(0,256,256,256,vram_buffer);
 	sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB);
@@ -118,8 +115,8 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 
 void PSPVideoOverrideNESClut() {
 	int i, r, g, b;
-	//unsigned int* clut = (unsigned int*)(((unsigned int)clut256)|0x40000000);
-	unsigned int* clut = clut256;
+	unsigned int* clut = (unsigned int*)(((unsigned int)clut256)|0x40000000);
+	//unsigned int* clut = clut256;
 	unsigned int color;
 
 	for(i = 0; i < 64 ; i++ ) {
