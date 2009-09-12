@@ -63,10 +63,9 @@ int main(int argc, char *argv[])
 
     PSPInputInitPads();
 
-    PSPVideoOverrideNESClut();
-
     PSPVideoInit();
 
+    PSPVideoOverrideNESClut();
 
 	while(CurGame) {//FCEUI_CloseGame turns this false
         DoFun();
