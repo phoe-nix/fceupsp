@@ -79,12 +79,12 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 	sceGuStart(GU_DIRECT,list);
 
 	//memcpy(vram_buffer,XBuf,256 * 256);
-	swizzle_fast((u8*)vram_buffer,(const u8*)XBuf,256,256);
+	//swizzle_fast((u8*)vram_buffer,(const u8*)XBuf,256,256);
 
 	// setup CLUT texture
 	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
 	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
-	sceGuTexMode(GU_PSM_T8,0,0,GU_TRUE); // 8-bit image
+	sceGuTexMode(GU_PSM_T8,0,0,0); // 8-bit image
 	sceGuTexImage(0,256,256,256,vram_buffer);
 	sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB);
 	sceGuTexFilter(GU_LINEAR,GU_LINEAR);
