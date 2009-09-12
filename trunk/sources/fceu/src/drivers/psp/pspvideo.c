@@ -1,8 +1,13 @@
 #include <pspgu.h>
 #include <pspdisplay.h>
+#include <string.h>
 
 #include "../../types.h"
 #include "../../driver.h"
+#include "vram.h"
+
+void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height);
+void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice);
 
 #define BUF_WIDTH (512)
 #define SCR_WIDTH (480)
@@ -10,6 +15,8 @@
 #define PIXEL_SIZE (4) /* change this if you change to another screenmode */
 #define FRAME_SIZE (BUF_WIDTH * SCR_HEIGHT * PIXEL_SIZE)
 #define ZBUF_SIZE (BUF_WIDTH SCR_HEIGHT * 2) /* zbuffer seems to be 16-bit? */
+
+#define SLICE_SIZE 16 // change this to experiment with different page-cache sizes
 
 u32 NesPalette[64] =
 {
@@ -31,15 +38,22 @@ struct Vertex
 
 static unsigned int __attribute__((aligned(16))) list[262144];
 unsigned int __attribute__((aligned(16))) clut256[256];
+void* vram_buffer;
 
 void PSPVideoInit() {
 	// Setup GU
 	sceGuInit(); // Turn on the GU
 	sceGuStart(GU_DIRECT,list); // Start filling a command list.
 
-	sceGuDrawBuffer(GU_PSM_8888,(void*)0,BUF_WIDTH); // Point out the drawing buffer
-	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,(void*)FRAME_SIZE,BUF_WIDTH); // Point out the display buffer
-	sceGuDepthBuffer((void*)(FRAME_SIZE*2),BUF_WIDTH); // Point out the depth buffer
+	void* fbp0 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* fbp1 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+
+	vram_buffer = getStaticVramTexture(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+
+	sceGuDrawBuffer(GU_PSM_8888,fbp0,BUF_WIDTH); // Point out the drawing buffer
+	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,fbp1,BUF_WIDTH); // Point out the display buffer
+	sceGuDepthBuffer(zbp,BUF_WIDTH); // Point out the depth buffer
 	sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2)); // Define current drawing area.
 	sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT); // Center screen in virtual space.
 	sceGuDepthRange(0xc350,0x2710); // Tells the GU what value range to use within the depth buffer.
@@ -49,6 +63,9 @@ void PSPVideoInit() {
 	sceGuEnable(GU_TEXTURE_2D); // Enables texturing of primitives.
 	sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT); // Clears current drawbuffer
 
+	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
+	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
+
 	sceGuFinish(); // End of command list
 	sceGuSync(0,0); // Wait for list to finish executing
 
@@ -56,35 +73,40 @@ void PSPVideoInit() {
 	sceGuDisplay(GU_TRUE); // VRAM should be displayed on screen.
 
 	// Clear screen
-	sceGuClearColor(0xff00ff); // Sets current clear color
-	sceGuClear(GU_COLOR_BUFFER_BIT); // Clears current drawbuffer
+	//sceGuClearColor(0xff00ff); // Sets current clear color
+	//sceGuClear(GU_COLOR_BUFFER_BIT); // Clears current drawbuffer
 }
 
 
 void PSPVideoRenderFrame(uint8 *XBuf) {
 	sceGuStart(GU_DIRECT,list);
 
+	//memcpy(vram_buffer,XBuf,256 * 256);
+	swizzle_fast((u8*)vram_buffer,(const u8*)XBuf,256,256);
+
 	// setup CLUT texture
-	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
-	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
-	sceGuTexMode(GU_PSM_T8,0,0,0); // 8-bit image
-	sceGuTexImage(0,256,256,256,XBuf);
+//	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
+//	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
+	sceGuTexMode(GU_PSM_T8,0,0,GU_TRUE); // 8-bit image
+	sceGuTexImage(0,256,256,256,vram_buffer);
 	sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB);
 	sceGuTexFilter(GU_LINEAR,GU_LINEAR);
 	//sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-	sceGuTexScale(1.0f,1.0f);
-	sceGuTexOffset(0.0f,0.0f);
-	sceGuAmbientColor(0xffffffff);
+	//sceGuTexScale(1.0f,1.0f);
+	//sceGuTexOffset(0.0f,0.0f);
+	//sceGuAmbientColor(0xffffffff);
 
-	// render sprite
-	sceGuColor(0xffffffff);
-	struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
-	vertices[0].u = 0; vertices[0].v = 0;
-	vertices[0].x = 85; vertices[0].y = 0; vertices[0].z = 0;
-	vertices[1].u = 256; vertices[1].v = 256;
-	//vertices[1].x = 480; vertices[1].y = 272; vertices[1].z = 0;
-	vertices[1].x = 394; vertices[1].y = 290; vertices[1].z = 0;
-	sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
+//	// render sprite
+//	sceGuColor(0xffffffff);
+//	struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
+//	vertices[0].u = 0; vertices[0].v = 0;
+//	vertices[0].x = 58; vertices[0].y = 0; vertices[0].z = 0;
+//	vertices[1].u = 256; vertices[1].v = 240;
+//	vertices[1].x = 422; vertices[1].y = 272; vertices[1].z = 0;
+//	//vertices[1].x = 394; vertices[1].y = 290; vertices[1].z = 0;
+//	sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
+
+	advancedBlit(0, 0, 256, 240, 112, 16, SLICE_SIZE);
 
 	// wait for next frame
 	sceGuFinish();
@@ -96,7 +118,8 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 
 void PSPVideoOverrideNESClut() {
 	int i, r, g, b;
-	unsigned int* clut = (unsigned int*)(((unsigned int)clut256)|0x40000000);
+	//unsigned int* clut = (unsigned int*)(((unsigned int)clut256)|0x40000000);
+	unsigned int* clut = clut256;
 	unsigned int color;
 
 	for(i = 0; i < 64 ; i++ ) {
@@ -113,5 +136,60 @@ void PSPVideoOverrideNESClut() {
     }
 }
 
+void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height)
+{
+   unsigned int blockx, blocky;
+   unsigned int j;
 
+   unsigned int width_blocks = (width / 16);
+   unsigned int height_blocks = (height / 8);
 
+   unsigned int src_pitch = (width-16)/4;
+   unsigned int src_row = width * 8;
+
+   const u8* ysrc = in;
+   u32* dst = (u32*)out;
+
+   for (blocky = 0; blocky < height_blocks; ++blocky)
+   {
+      const u8* xsrc = ysrc;
+      for (blockx = 0; blockx < width_blocks; ++blockx)
+      {
+         const u32* src = (u32*)xsrc;
+         for (j = 0; j < 8; ++j)
+         {
+            *(dst++) = *(src++);
+            *(dst++) = *(src++);
+            *(dst++) = *(src++);
+            *(dst++) = *(src++);
+            src += src_pitch;
+         }
+         xsrc += 16;
+     }
+     ysrc += src_row;
+   }
+}
+
+void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice)
+{
+	int start, end;
+
+	// blit maximizing the use of the texture-cache
+
+	for (start = sx, end = sx+sw; start < end; start += slice, dx += slice)
+	{
+		struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
+		int width = (start + slice) < end ? slice : end-start;
+
+		vertices[0].u = start; vertices[0].v = sy;
+		//vertices[0].color = 0;
+		vertices[0].x = dx; vertices[0].y = dy; vertices[0].z = 0;
+
+		vertices[1].u = start + width; vertices[1].v = sy + sh;
+		//vertices[1].color = 0;
+		vertices[1].x = dx + width; vertices[1].y = dy + sh; vertices[1].z = 0;
+
+		//sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT|GU_COLOR_4444|GU_VERTEX_16BIT|GU_TRANSFORM_2D,2,0,vertices);
+		sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
+	}
+}

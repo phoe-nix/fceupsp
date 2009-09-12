@@ -24,12 +24,12 @@ void PSPInputInitPads() {
 }
 
 void PSPInputReadPad() {
-	NESButtons = 0;
+	int buttons = 0;
 	sceCtrlReadBufferPositive(&pad, 1);
 
 	if (pad.Buttons != 0){
 		if (pad.Buttons & PSP_CTRL_SQUARE){
-			NESButtons |= JOY_B;
+			buttons |= JOY_B;
 			printf("Square pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_TRIANGLE){
@@ -39,33 +39,33 @@ void PSPInputReadPad() {
 			printf("Cicle pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_CROSS){
-			NESButtons |= JOY_A;
+			buttons |= JOY_A;
 			printf("Cross pressed \n");
 		}
 
 		if (pad.Buttons & PSP_CTRL_UP){
-			NESButtons |= JOY_UP;
+			buttons |= JOY_UP;
 			printf("Up pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_DOWN){
-			NESButtons |= JOY_DOWN;
+			buttons |= JOY_DOWN;
 			printf("Down pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_LEFT){
-			NESButtons |= JOY_LEFT;
+			buttons |= JOY_LEFT;
 			printf("Left pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_RIGHT){
-			NESButtons |= JOY_RIGHT;
+			buttons |= JOY_RIGHT;
 			printf("Right pressed \n");
 		}
 
 		if (pad.Buttons & PSP_CTRL_START){
-			NESButtons |= JOY_START;
+			buttons |= JOY_START;
 			printf("Start pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_SELECT){
-			NESButtons |= JOY_SELECT;
+			buttons |= JOY_SELECT;
 			printf("Select pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_LTRIGGER){
@@ -75,4 +75,6 @@ void PSPInputReadPad() {
 			printf("R-trigger pressed \n");
 		}
 	}
+
+	NESButtons = buttons;
 }
