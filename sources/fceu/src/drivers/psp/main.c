@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
     FCEUGI *tmp;
 
-    if((tmp=FCEUI_LoadGame("ms0:/nesrom.nes"))) {
+    if((tmp=FCEUI_LoadGame("ms0:/nesrom2.nes"))) {
         printf("Game Loaded!\n");
         CurGame=tmp;
     }

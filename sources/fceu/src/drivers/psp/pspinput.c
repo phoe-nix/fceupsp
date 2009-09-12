@@ -24,10 +24,12 @@ void PSPInputInitPads() {
 }
 
 void PSPInputReadPad() {
+	static int old_buttons = 0;
 	int buttons = 0;
 	sceCtrlReadBufferPositive(&pad, 1);
 
-	if (pad.Buttons != 0){
+	//if (pad.Buttons != 0 && pad.Buttons != old_buttons){
+	if (pad.Buttons != old_buttons){
 		if (pad.Buttons & PSP_CTRL_SQUARE){
 			buttons |= JOY_B;
 			printf("Square pressed \n");
@@ -74,7 +76,8 @@ void PSPInputReadPad() {
 		if (pad.Buttons & PSP_CTRL_RTRIGGER){
 			printf("R-trigger pressed \n");
 		}
-	}
 
-	NESButtons = buttons;
+		old_buttons = pad.Buttons;
+		NESButtons = buttons;
+	}
 }
