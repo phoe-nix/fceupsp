@@ -25,7 +25,8 @@ PSP_HEAP_SIZE_KB(10 * 1024);
 FCEUGI *CurGame = NULL;
 void DoFun();
 //extern unsigned int __attribute__((aligned(16))) clut256[];
-//extern uint8 *XBuf;
+extern uint8 *XBuf;
+extern void* vram_buffer;
 int SetupCallbacks(void);
 
 int main(int argc, char *argv[])
@@ -36,7 +37,9 @@ int main(int argc, char *argv[])
 
 	scePowerSetClockFrequency(333, 333, 166);
 
-	//XBuf = getStaticVramBuffer(512,272,3);
+    PSPVideoInit();
+
+	XBuf = (uint8 *)((unsigned int)vram_buffer|0x40000000);
 
     if(!(FCEUI_Initialize())) {
 		printf("FCEUltra did not initialize.\n");
@@ -62,8 +65,6 @@ int main(int argc, char *argv[])
     }
 
     PSPInputInitPads();
-
-    PSPVideoInit();
 
     PSPVideoOverrideNESClut();
 
