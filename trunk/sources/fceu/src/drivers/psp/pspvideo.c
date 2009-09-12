@@ -4,7 +4,10 @@
 
 #include "../../types.h"
 #include "../../driver.h"
+#include "../../fceu.h"
 #include "vram.h"
+
+extern uint8 *XBuf;
 
 void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height);
 void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice);
@@ -16,7 +19,7 @@ void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice);
 #define FRAME_SIZE (BUF_WIDTH * SCR_HEIGHT * PIXEL_SIZE)
 #define ZBUF_SIZE (BUF_WIDTH SCR_HEIGHT * 2) /* zbuffer seems to be 16-bit? */
 
-#define SLICE_SIZE 16 // change this to experiment with different page-cache sizes
+#define SLICE_SIZE 8 // change this to experiment with different page-cache sizes
 
 u32 NesPalette[64] =
 {
@@ -50,6 +53,8 @@ void PSPVideoInit() {
 	void* zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
 
 	vram_buffer = getStaticVramTexture(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+
+	XBuf = (uint8 *)((unsigned int)vram_buffer|0x40000000);
 
 	sceGuDrawBuffer(GU_PSM_8888,fbp0,BUF_WIDTH); // Point out the drawing buffer
 	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,fbp1,BUF_WIDTH); // Point out the display buffer
@@ -87,9 +92,9 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 	sceGuTexMode(GU_PSM_T8,0,0,0); // 8-bit image
 	sceGuTexImage(0,256,256,256,vram_buffer);
 	sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB);
-	sceGuTexFilter(GU_LINEAR,GU_LINEAR);
-	//sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-	//sceGuTexScale(1.0f,1.0f);
+	//sceGuTexFilter(GU_LINEAR,GU_LINEAR);
+	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+	//sceGuTexScale(2.0f,2.0f);
 	//sceGuTexOffset(0.0f,0.0f);
 	//sceGuAmbientColor(0xffffffff);
 
