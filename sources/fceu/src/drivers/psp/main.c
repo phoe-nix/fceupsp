@@ -25,8 +25,8 @@ PSP_HEAP_SIZE_KB(10 * 1024);
 FCEUGI *CurGame = NULL;
 void DoFun();
 //extern unsigned int __attribute__((aligned(16))) clut256[];
-extern uint8 *XBuf;
-extern void* vram_buffer;
+//extern uint8 *XBuf;
+//extern void* vram_buffer;
 int SetupCallbacks(void);
 
 int main(int argc, char *argv[])
@@ -39,7 +39,7 @@ int main(int argc, char *argv[])
 
     PSPVideoInit();
 
-	XBuf = (uint8 *)((unsigned int)vram_buffer|0x40000000);
+	//XBuf = (uint8 *)((unsigned int)vram_buffer|0x40000000);
 
     if(!(FCEUI_Initialize())) {
 		printf("FCEUltra did not initialize.\n");
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
 
     FCEUGI *tmp;
 
-    if((tmp=FCEUI_LoadGame("ms0:/nesrom2.nes"))) {
+    if((tmp=FCEUI_LoadGame("ms0:/nesrom.nes"))) {
         printf("Game Loaded!\n");
         CurGame=tmp;
     }
