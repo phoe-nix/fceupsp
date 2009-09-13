@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 	FCEUI_SetSoundVolume(1024);
 	FCEUI_SetSoundQuality(0);
 	FCEUI_SetLowPass(0);
-	FCEUI_Sound(44100);
+	FCEUI_Sound(22050);
 
     FCEUGI *tmp;
 
@@ -91,10 +91,11 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 
 void inline PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
     int i;
-    s16 ssound[ssize<<1];
+    s16 ssound[ssize<<1*2];
 
-    for (i=0;i<ssize<<1;i++) {
+    for (i=0;i<ssize<<1*2;i+=2) {
         ssound[i]=tmpsnd[i];
+        ssound[i+1]=tmpsnd[i];
     }
     //sceAudioSetChannelDataLen(chan, ssize<<8);
 	sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);

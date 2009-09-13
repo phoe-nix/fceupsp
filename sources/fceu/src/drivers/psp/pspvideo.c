@@ -48,17 +48,19 @@ void PSPVideoInit() {
 	sceGuInit(); // Turn on the GU
 	sceGuStart(GU_DIRECT,list); // Start filling a command list.
 
-	void* fbp0 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
-	void* fbp1 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
-	void* zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* __attribute__((aligned(64))) fbp0 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* __attribute__((aligned(64))) fbp1 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* __attribute__((aligned(64))) zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
 
 	vram_buffer = getStaticVramTexture(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
 
 	XBuf = (uint8 *)((unsigned int)vram_buffer|0x40000000);
 
-	sceGuDrawBuffer(GU_PSM_8888,fbp0,BUF_WIDTH); // Point out the drawing buffer
-	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,fbp1,BUF_WIDTH); // Point out the display buffer
-	sceGuDepthBuffer(zbp,BUF_WIDTH); // Point out the depth buffer
+	sceKernelDcacheWritebackAll();
+
+	sceGuDrawBuffer(GU_PSM_8888,(void *)((unsigned int)fbp0|0x40000000),BUF_WIDTH); // Point out the drawing buffer
+	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,(void *)((unsigned int)fbp1|0x40000000),BUF_WIDTH); // Point out the display buffer
+	sceGuDepthBuffer((void *)((unsigned int)zbp|0x40000000),BUF_WIDTH); // Point out the depth buffer
 	sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2)); // Define current drawing area.
 	sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT); // Center screen in virtual space.
 	sceGuDepthRange(0xc350,0x2710); // Tells the GU what value range to use within the depth buffer.
@@ -92,8 +94,8 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 	sceGuTexMode(GU_PSM_T8,0,0,0); // 8-bit image
 	sceGuTexImage(0,256,256,256,vram_buffer);
 	sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB);
-	//sceGuTexFilter(GU_LINEAR,GU_LINEAR);
-	sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+	sceGuTexFilter(GU_LINEAR,GU_LINEAR);
+	//sceGuTexFilter(GU_NEAREST, GU_NEAREST);
 	//sceGuTexScale(2.0f,2.0f);
 	//sceGuTexOffset(0.0f,0.0f);
 	//sceGuAmbientColor(0xffffffff);
