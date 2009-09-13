@@ -97,7 +97,7 @@ void inline PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
         ssound[i]=tmpsnd[i];
     }
     //sceAudioSetChannelDataLen(chan, ssize<<8);
-	sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);
+	sceAudioOutput(chan, PSP_AUDIO_VOLUME_MAX, ssound);
 }
 
 void DoFun()
