@@ -53,7 +53,7 @@ BUILD_PRX=1
 
 LIBDIR =
 LDFLAGS =
-LIBS = -lz -lm -lpspgu -lpsppower
+LIBS = -lz -lm -lpspgu -lpsppower -lpspaudiolib -lpspaudio
 
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = FCEU-PSP

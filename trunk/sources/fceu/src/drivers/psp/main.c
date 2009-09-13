@@ -3,6 +3,9 @@
 #include <stdio.h>
 #include <psppower.h>
 #include <pspgu.h>
+#include <pspaudiolib.h>
+#include <pspaudio.h>
+#include <string.h>
 
 
 #include "../../types.h"
@@ -24,10 +27,10 @@ PSP_HEAP_SIZE_KB(10 * 1024);
 
 FCEUGI *CurGame = NULL;
 void DoFun();
-//extern unsigned int __attribute__((aligned(16))) clut256[];
-//extern uint8 *XBuf;
-//extern void* vram_buffer;
 int SetupCallbacks(void);
+
+void PSPSoundOutput(int32 *tmpsnd, int32 ssize);
+int chan;
 
 int main(int argc, char *argv[])
 {
@@ -39,7 +42,7 @@ int main(int argc, char *argv[])
 
     PSPVideoInit();
 
-	//XBuf = (uint8 *)((unsigned int)vram_buffer|0x40000000);
+    chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, 64 * 7, PSP_AUDIO_FORMAT_MONO);
 
     if(!(FCEUI_Initialize())) {
 		printf("FCEUltra did not initialize.\n");
@@ -49,14 +52,14 @@ int main(int argc, char *argv[])
 	FCEUI_SetVidSystem(0); // 0 - NTSC
 	FCEUI_SetGameGenie(0);
 	FCEUI_DisableSpriteLimitation(1);
-	FCEUI_SetSoundVolume(0);
+	FCEUI_SetSoundVolume(1024);
 	FCEUI_SetSoundQuality(0);
 	FCEUI_SetLowPass(0);
-	FCEUI_Sound(0);
+	FCEUI_Sound(22050);
 
     FCEUGI *tmp;
 
-    if((tmp=FCEUI_LoadGame("ms0:/nesrom2.nes"))) {
+    if((tmp=FCEUI_LoadGame("ms0:/nesrom.nes"))) {
         printf("Game Loaded!\n");
         CurGame=tmp;
     }
@@ -83,14 +86,13 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 {
 	PSPVideoRenderFrame(XBuf);
 	PSPInputReadPad();
-	//printf("FCEUD_Update\n");
+	PSPSoundOutput(tmpsnd, ssize);
+}
 
-//	OutputSound(tmpsnd, ssize);
-
-//	if (Get_NESInput()) {
-//		FCEUI_CloseGame();
-//		CurGame=0;
-//	}
+void PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
+//	u8 s[ssize*4];
+//	memcpy(s, (u8*)tmpsnd, ssize*4);
+	sceAudioOutput(chan, PSP_AUDIO_VOLUME_MAX, tmpsnd);
 }
 
 void DoFun()
