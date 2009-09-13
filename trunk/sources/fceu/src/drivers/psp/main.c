@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 
     PSPVideoInit();
 
-    chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(64*7), PSP_AUDIO_FORMAT_MONO);
+    chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(768), PSP_AUDIO_FORMAT_MONO);
 
     if(!(FCEUI_Initialize())) {
 		printf("FCEUltra did not initialize.\n");
@@ -91,13 +91,13 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 
 void inline PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
     int i;
-    s16 ssound[ssize];
+    s16 ssound[ssize<<1];
 
-    for (i=0;i<ssize;i++) {
+    for (i=0;i<ssize<<1;i++) {
         ssound[i]=tmpsnd[i];
     }
     //sceAudioSetChannelDataLen(chan, ssize<<8);
-	sceAudioOutput(chan, PSP_AUDIO_VOLUME_MAX, ssound);
+	sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);
 }
 
 void DoFun()
