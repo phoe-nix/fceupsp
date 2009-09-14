@@ -19,7 +19,7 @@ void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice);
 #define FRAME_SIZE (BUF_WIDTH * SCR_HEIGHT * PIXEL_SIZE)
 #define ZBUF_SIZE (BUF_WIDTH SCR_HEIGHT * 2) /* zbuffer seems to be 16-bit? */
 
-#define SLICE_SIZE 8 // change this to experiment with different page-cache sizes
+#define SLICE_SIZE 4 // change this to experiment with different page-cache sizes
 
 u32 NesPalette[64] =
 {
