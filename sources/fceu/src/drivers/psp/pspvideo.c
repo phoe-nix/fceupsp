@@ -10,7 +10,7 @@
 extern uint8 *XBuf;
 
 void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height);
-void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice);
+void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice, float scale);
 
 #define BUF_WIDTH (512)
 #define SCR_WIDTH (480)
@@ -42,6 +42,7 @@ struct Vertex
 static unsigned int __attribute__((aligned(16))) list[262144];
 unsigned int __attribute__((aligned(16))) clut256[256];
 void* vram_buffer;
+int stretch_video = 0;
 
 void PSPVideoInit() {
 	// Setup GU
@@ -96,23 +97,29 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 	sceGuTexMode(GU_PSM_T8,0,0,0); // 8-bit image
 	sceGuTexImage(0,512,512,256,vram_buffer);
 	sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB);
-	sceGuTexFilter(GU_LINEAR,GU_LINEAR);
-	//sceGuTexFilter(GU_NEAREST, GU_NEAREST);
-	//sceGuTexScale(2.0f,2.0f);
-	//sceGuTexOffset(0.0f,0.0f);
-	//sceGuAmbientColor(0xffffffff);
+
+	if(stretch_video)
+		sceGuTexFilter(GU_LINEAR,GU_LINEAR);
+	else
+		sceGuTexFilter(GU_NEAREST, GU_NEAREST);
+
+//	sceGuTexScale(2.0f,2.0f);
+//	sceGuTexOffset(0.0f,0.0f);
+//	sceGuAmbientColor(0xffffffff);
 
 //	// render sprite
-//	//sceGuColor(0xffffffff);
+//	sceGuColor(0xffffffff);
 //	struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
 //	vertices[0].u = 0; vertices[0].v = 0;
 //	vertices[0].x = 58; vertices[0].y = 0; vertices[0].z = 0;
 //	vertices[1].u = 256; vertices[1].v = 240;
 //	vertices[1].x = 422; vertices[1].y = 272; vertices[1].z = 0;
-//	//vertices[1].x = 394; vertices[1].y = 290; vertices[1].z = 0;
 //	sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
 
-	advancedBlit(0, 0, 256, 240, 112, 16, SLICE_SIZE);
+	if(stretch_video)
+		advancedBlit(0, 10, 256, 240, 70, 0, SLICE_SIZE, 1.2);
+	else
+		advancedBlit(0, 0, 256, 240, 112, 16, SLICE_SIZE, 1.0);;
 
 	// wait for next frame
 	sceGuFinish();
@@ -176,7 +183,7 @@ void swizzle_fast(u8* out, const u8* in, unsigned int width, unsigned int height
    }
 }
 
-void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice)
+void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice, float scale)
 {
 	int start, end;
 
@@ -189,13 +196,29 @@ void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice)
 
 		vertices[0].u = start; vertices[0].v = sy;
 		//vertices[0].color = 0;
-		vertices[0].x = dx; vertices[0].y = dy; vertices[0].z = 0;
+		vertices[0].x = dx * scale; vertices[0].y = dy * scale; vertices[0].z = 0;
 
 		vertices[1].u = start + width; vertices[1].v = sy + sh;
 		//vertices[1].color = 0;
-		vertices[1].x = dx + width; vertices[1].y = dy + sh; vertices[1].z = 0;
+		vertices[1].x = (dx + width) * scale; vertices[1].y = (dy + sh) * scale; vertices[1].z = 0;
 
 		//sceGuDrawArray(GU_SPRITES,GU_TEXTURE_16BIT|GU_COLOR_4444|GU_VERTEX_16BIT|GU_TRANSFORM_2D,2,0,vertices);
 		sceGuDrawArray(GU_SPRITES,GU_TEXTURE_32BITF|GU_VERTEX_32BITF|GU_TRANSFORM_2D,2,0,vertices);
+	}
+}
+
+void PSPVideoToggleScreen() {
+	stretch_video = ~stretch_video;
+	int i;
+
+	//Clear screen and depth buffers.
+	for(i = 0; i < 2; i++) {
+		sceGuStart(GU_DIRECT,list);
+		sceGuClearColor(0xff000000);
+		sceGuClearDepth(0);
+		sceGuClear(GU_COLOR_BUFFER_BIT|GU_DEPTH_BUFFER_BIT);
+		sceGuFinish();
+		sceGuSync(0,0);
+		sceGuSwapBuffers();
 	}
 }

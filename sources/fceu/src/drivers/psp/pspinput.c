@@ -5,6 +5,7 @@
 #include "../../types.h"
 #include "../../driver.h"
 #include "../../fceu.h"
+#include "pspvideo.h"
 
 int NESButtons;
 SceCtrlData pad;
@@ -77,6 +78,7 @@ void PSPInputReadPad() {
 			printf("L-trigger pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_RTRIGGER){
+			PSPVideoToggleScreen();
 			printf("R-trigger pressed \n");
 		}
 

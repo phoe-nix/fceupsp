@@ -5,6 +5,7 @@
 void PSPVideoInit();
 void PSPVideoRenderFrame(uint8 *XBuf);
 void PSPVideoOverrideNESClut();
+void PSPVideoToggleScreen();
 
 
 #endif /* PSPVIDEO_H_ */
