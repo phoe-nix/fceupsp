@@ -9,6 +9,8 @@
 int NESButtons;
 SceCtrlData pad;
 
+extern int endgame;
+
 void PSPInputInitPads() {
     void *NESPads;
 	int attrib = 0;
@@ -71,6 +73,7 @@ void PSPInputReadPad() {
 			printf("Select pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_LTRIGGER){
+			endgame = 1;
 			printf("L-trigger pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_RTRIGGER){

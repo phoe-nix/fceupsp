@@ -13,8 +13,9 @@
 #include "pspvideo.h"
 #include "pspinput.h"
 #include "vram.h"
+#include "file_browser.h"
 
-#define SOUND_ENABLED
+//#define SOUND_ENABLED
 
 /* Define the module info section */
 PSP_MODULE_INFO("fceu-psp", 0, 1, 1);
@@ -26,11 +27,40 @@ PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 PSP_HEAP_SIZE_KB(10 * 1024);
 
 FCEUGI *CurGame = NULL;
+int endgame = 0;
 void DoFun();
 int SetupCallbacks(void);
 
 void PSPSoundOutput(int32 *tmpsnd, int32 ssize);
 int chan;
+s16 sound_data[4096];
+int sound_data_size;
+
+void audioCallback(void* buf, unsigned int length, void *userdata) {
+//	const float sampleLength = 1.0f / sampleRate;
+//	const float scaleFactor = SHRT_MAX - 1.0f;
+//	static float freq0 = 440.0f;
+//	sample_t* ubuf = (sample_t*) buf;
+//
+//	int i;
+//
+//	if (frequency != freq0) {
+//		time *= (freq0 / frequency);
+//	}
+//	for (i = 0; i < length; i++) {
+//		short s = (short) (scaleFactor * currentFunction(2.0f * PI * frequency
+//				* time));
+//		ubuf[i].l = s;
+//		ubuf[i].r = s;
+//		time += sampleLength;
+//	}
+//	if (time * frequency > 1.0f) {
+//		double d;
+//		time = modf(time * frequency, &d) / frequency;
+//	}
+//	freq0 = frequency;
+	memcpy(buf, sound_data, length);
+}
 
 int main(int argc, char *argv[])
 {
@@ -44,6 +74,9 @@ int main(int argc, char *argv[])
 
 #ifdef SOUND_ENABLED
     chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(734), PSP_AUDIO_FORMAT_MONO);
+//	pspAudioInit();
+//	pspAudioSetChannelCallback(0, audioCallback, NULL);
+
 #endif
 
     if(!(FCEUI_Initialize())) {
@@ -65,20 +98,25 @@ int main(int argc, char *argv[])
 
     FCEUGI *tmp;
 
-    if((tmp=FCEUI_LoadGame("ms0:/nesrom2.nes"))) {
-        printf("Game Loaded!\n");
-        CurGame=tmp;
-    }
-    else {
-        printf("Didn't load Game!\n");
-    }
+    for(;;) {
+    	pspDebugScreenInit();
 
-    PSPInputInitPads();
+    	if((tmp=FCEUI_LoadGame(file_browser("ms0:/")))) {
+    		printf("Game Loaded!\n");
+    		CurGame=tmp;
+    	}
+    	else {
+    		printf("Didn't load Game!\n");
+    		continue;
+    	}
 
-    PSPVideoOverrideNESClut();
+    	PSPInputInitPads();
 
-	while(CurGame) {//FCEUI_CloseGame turns this false
-        DoFun();
+    	PSPVideoOverrideNESClut();
+
+    	while(CurGame) {//FCEUI_CloseGame turns this false
+    		DoFun();
+    	}
     }
 
 	sceGuTerm();
@@ -92,6 +130,13 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 {
 	PSPVideoRenderFrame(XBuf);
 	PSPInputReadPad();
+
+	if(endgame) {
+		FCEUI_CloseGame();
+		CurGame=0;
+		endgame = 0;
+	}
+
 #ifdef SOUND_ENABLED
 	PSPSoundOutput(tmpsnd, ssize);
 #endif
@@ -102,12 +147,14 @@ void inline PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
     int i;
     s16 ssound[ssize<<1];
 
+	memset(sound_data, 0, 4096);
+
     for (i=0;i<ssize<<1;i++) {
         ssound[i]=tmpsnd[i];
 
     }
     //printf("ssize<<1: %d\n", ssize<<1);
-    sceAudioSetChannelDataLen(chan, ssize/4);
+    sceAudioSetChannelDataLen(chan, ssize<<1);
 	sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);
 }
 

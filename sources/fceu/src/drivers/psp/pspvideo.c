@@ -19,7 +19,7 @@ void advancedBlit(int sx, int sy, int sw, int sh, int dx, int dy, int slice);
 #define FRAME_SIZE (BUF_WIDTH * SCR_HEIGHT * PIXEL_SIZE)
 #define ZBUF_SIZE (BUF_WIDTH SCR_HEIGHT * 2) /* zbuffer seems to be 16-bit? */
 
-#define SLICE_SIZE 4 // change this to experiment with different page-cache sizes
+#define SLICE_SIZE 32 // change this to experiment with different page-cache sizes
 
 u32 NesPalette[64] =
 {
@@ -48,9 +48,9 @@ void PSPVideoInit() {
 	sceGuInit(); // Turn on the GU
 	sceGuStart(GU_DIRECT,list); // Start filling a command list.
 
-	void* __attribute__((aligned(64))) fbp0 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
-	void* __attribute__((aligned(64))) fbp1 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
-	void* __attribute__((aligned(64))) zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* fbp0 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* fbp1 = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
+	void* zbp = getStaticVramBuffer(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
 
 	vram_buffer = getStaticVramTexture(BUF_WIDTH,SCR_HEIGHT,GU_PSM_8888);
 
@@ -58,9 +58,9 @@ void PSPVideoInit() {
 
 	sceKernelDcacheWritebackAll();
 
-	sceGuDrawBuffer(GU_PSM_8888,(void *)((unsigned int)fbp0|0x40000000),BUF_WIDTH); // Point out the drawing buffer
-	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,(void *)((unsigned int)fbp1|0x40000000),BUF_WIDTH); // Point out the display buffer
-	sceGuDepthBuffer((void *)((unsigned int)zbp|0x40000000),BUF_WIDTH); // Point out the depth buffer
+	sceGuDrawBuffer(GU_PSM_8888,fbp0,BUF_WIDTH); // Point out the drawing buffer
+	sceGuDispBuffer(SCR_WIDTH,SCR_HEIGHT,fbp1,BUF_WIDTH); // Point out the display buffer
+	sceGuDepthBuffer(zbp,BUF_WIDTH); // Point out the depth buffer
 	sceGuOffset(2048 - (SCR_WIDTH/2),2048 - (SCR_HEIGHT/2)); // Define current drawing area.
 	sceGuViewport(2048,2048,SCR_WIDTH,SCR_HEIGHT); // Center screen in virtual space.
 	sceGuDepthRange(0xc350,0x2710); // Tells the GU what value range to use within the depth buffer.
@@ -76,13 +76,15 @@ void PSPVideoInit() {
 	sceDisplayWaitVblankStart(); // Wait for vertical blank start
 	sceGuDisplay(GU_TRUE); // VRAM should be displayed on screen.
 
-	// Clear screen
-	//sceGuClearColor(0xff00ff); // Sets current clear color
-	//sceGuClear(GU_COLOR_BUFFER_BIT); // Clears current drawbuffer
+//	// Clear screen
+//	sceGuClearColor(0xff00ff); // Sets current clear color
+//	sceGuClear(GU_COLOR_BUFFER_BIT); // Clears current drawbuffer
 }
 
 
 void PSPVideoRenderFrame(uint8 *XBuf) {
+	//sceKernelDcacheWritebackAll();
+
 	sceGuStart(GU_DIRECT,list);
 
 	//memcpy(vram_buffer,XBuf,256 * 256);
@@ -92,7 +94,7 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 	sceGuClutMode(GU_PSM_8888,0,0xff,0); // 32-bit palette
 	sceGuClutLoad((256/8),clut256); // upload 32*8 entries (256)
 	sceGuTexMode(GU_PSM_T8,0,0,0); // 8-bit image
-	sceGuTexImage(0,256,256,256,vram_buffer);
+	sceGuTexImage(0,512,512,256,vram_buffer);
 	sceGuTexFunc(GU_TFX_REPLACE,GU_TCC_RGB);
 	sceGuTexFilter(GU_LINEAR,GU_LINEAR);
 	//sceGuTexFilter(GU_NEAREST, GU_NEAREST);
@@ -101,7 +103,7 @@ void PSPVideoRenderFrame(uint8 *XBuf) {
 	//sceGuAmbientColor(0xffffffff);
 
 //	// render sprite
-//	sceGuColor(0xffffffff);
+//	//sceGuColor(0xffffffff);
 //	struct Vertex* vertices = (struct Vertex*)sceGuGetMemory(2 * sizeof(struct Vertex));
 //	vertices[0].u = 0; vertices[0].v = 0;
 //	vertices[0].x = 58; vertices[0].y = 0; vertices[0].z = 0;
