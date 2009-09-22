@@ -36,32 +36,6 @@ int chan;
 int32 *tmpsnd_;
 int32 ssize_;
 
-void audioCallback(void* buf, unsigned int length, void *userdata) {
-//	const float sampleLength = 1.0f / sampleRate;
-//	const float scaleFactor = SHRT_MAX - 1.0f;
-//	static float freq0 = 440.0f;
-//	sample_t* ubuf = (sample_t*) buf;
-//
-//	int i;
-//
-//	if (frequency != freq0) {
-//		time *= (freq0 / frequency);
-//	}
-//	for (i = 0; i < length; i++) {
-//		short s = (short) (scaleFactor * currentFunction(2.0f * PI * frequency
-//				* time));
-//		ubuf[i].l = s;
-//		ubuf[i].r = s;
-//		time += sampleLength;
-//	}
-//	if (time * frequency > 1.0f) {
-//		double d;
-//		time = modf(time * frequency, &d) / frequency;
-//	}
-//	freq0 = frequency;
-//	memcpy(buf, sound_data, length);
-}
-
 int main(int argc, char *argv[])
 {
 	SetupCallbacks();
@@ -72,13 +46,6 @@ int main(int argc, char *argv[])
 
     PSPVideoInit();
 
-#ifdef SOUND_ENABLED
-    chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(367), PSP_AUDIO_FORMAT_MONO);
-//	pspAudioInit();
-//	pspAudioSetChannelCallback(0, audioCallback, NULL);
-
-#endif
-
     if(!(FCEUI_Initialize())) {
 		printf("FCEUltra did not initialize.\n");
 		return(0);
@@ -87,7 +54,7 @@ int main(int argc, char *argv[])
 	FCEUI_SetVidSystem(0); // 0 - NTSC
 	FCEUI_SetGameGenie(0);
 	FCEUI_DisableSpriteLimitation(1);
-	FCEUI_SetSoundVolume(100);
+	FCEUI_SetSoundVolume(512);
 	FCEUI_SetSoundQuality(0);
 	FCEUI_SetLowPass(0);
 #ifdef SOUND_ENABLED
@@ -100,6 +67,10 @@ int main(int argc, char *argv[])
 
     for(;;) {
     	pspDebugScreenInit();
+
+#ifdef SOUND_ENABLED
+    	chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(512), PSP_AUDIO_FORMAT_MONO);
+#endif
 
     	if((tmp=FCEUI_LoadGame(file_browser("ms0:/")))) {
     		printf("Game Loaded!\n");
@@ -114,17 +85,21 @@ int main(int argc, char *argv[])
 
     	PSPVideoOverrideNESClut();
 
-//    	SceUID new_thid = sceKernelCreateThread("audio_thread", PSPSoundOutput, 0x06, 0x10000, 0, 0);
-//    	if(new_thid) {
-//    		printf("Starting sound thread...\n");
-//    		sceKernelStartThread(new_thid, 0, NULL);
-//    	}
+    	SceUID new_thid = sceKernelCreateThread("audio_thread", PSPSoundOutput, 0x12, 0x10000, 0, 0);
+    	if(new_thid) {
+    		printf("Starting sound thread...\n");
+    		sceKernelStartThread(new_thid, 0, NULL);
+    	}
 
     	while(CurGame) {//FCEUI_CloseGame turns this false
     		DoFun();
     	}
 
     	//sceKernelTerminateDeleteThread(new_thid);
+    	sceKernelTerminateThread(new_thid);
+    	sceKernelWaitThreadEnd(new_thid,NULL);
+    	sceKernelDeleteThread(new_thid);
+    	sceAudioChRelease(chan);
     }
 
 	sceGuTerm();
@@ -146,42 +121,27 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 	}
 
 #ifdef SOUND_ENABLED
-//	tmpsnd_ = tmpsnd;
-//	ssize_ = ssize;
-	PSPSoundOutput(tmpsnd, ssize);
-//	printf("%d\n", ssize);
+	tmpsnd_ = tmpsnd;
+	ssize_ = ssize;
 #endif
 
 }
 
 void PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
-    int i, j = 0;
-    s16 ssound[ssize * 2];
+	for(;;) {
+		s16 ssound[ssize_<<1];
+		int i, j = 0;
+		u16 sample;
 
-//	int i;
-	u16 sample;
-//	u32 *dst = (u32 *)mixbuffer;
-
-	for( i = 0; i < ssize * 2; i+=2 )
-	{
-		sample = tmpsnd[j++];
-		ssound[i] = sample;
-		ssound[i+1] = sample;
+		for( i = 0; i < ssize_<<1; i+=2 )
+		{
+			sample = tmpsnd_[j++];
+			ssound[i] = sample;
+			ssound[i+1] = sample;
+		}
+		sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);
+		//printf("%d\n", ssize_);
 	}
-
-    //memset(ssound, 0, 1024);
-
-	//memset(sound_data, 0, 4096);
-
-//    for (i = 0, j = 0; j < ssize_; i += 2, j++) {
-//        ssound[i]=tmpsnd[j] & 0xFFFF;
-//        ssound[i+1]=tmpsnd[j] & 0xFFFF;
-//    }
-    //printf("ssize<<1: %d\n", ssize<<1);
-    //sceAudioSetChannelDataLen(chan, ssize<<1);
-	sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);
-//	printf("%d", ssize);
-	//return 0;
 }
 
 void DoFun()
