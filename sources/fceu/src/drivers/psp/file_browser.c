@@ -98,6 +98,7 @@ char* file_browser( const char* initial_dir)
 {
 	char* selection = NULL;
 
+	pspDebugScreenInit();
 	pspDebugScreenClear();
 	int browsing = 1;
 	int current_selection = 0;

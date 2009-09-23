@@ -3,15 +3,13 @@
 #include <stdio.h>
 #include <psppower.h>
 #include <pspgu.h>
-#include <pspaudiolib.h>
-#include <pspaudio.h>
-#include <string.h>
 
 #include "../../types.h"
 #include "../../driver.h"
 #include "../../fceu.h"
 #include "pspvideo.h"
 #include "pspinput.h"
+#include "pspaudio.h"
 #include "vram.h"
 #include "file_browser.h"
 
@@ -30,12 +28,6 @@ FCEUGI *CurGame = NULL;
 int endgame = 0;
 void DoFun();
 int SetupCallbacks(void);
-
-void PSPSoundOutput(int32 *tmpsnd, int32 ssize);
-int chan;
-int32 *tmpsnd_;
-int32 ssize_ = 0;
-SceUID has_audio;
 
 int main(int argc, char *argv[])
 {
@@ -64,17 +56,13 @@ int main(int argc, char *argv[])
 	FCEUI_Sound(0);
 #endif
 
-    FCEUGI *tmp;
-
-    has_audio = sceKernelCreateSema("has_audio", 0, 0, 1, 0);
-
-    for(;;) {
-    	pspDebugScreenInit();
-
 #ifdef SOUND_ENABLED
-    	chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(512), PSP_AUDIO_FORMAT_MONO);
+    PSPAudioInit();
 #endif
 
+    FCEUGI *tmp;
+
+    for(;;) {
     	if((tmp=FCEUI_LoadGame(file_browser("ms0:/")))) {
     		printf("Game Loaded!\n");
     		CurGame=tmp;
@@ -88,22 +76,22 @@ int main(int argc, char *argv[])
 
     	PSPVideoOverrideNESClut();
 
-    	SceUID new_thid = sceKernelCreateThread("audio_thread", PSPSoundOutput, 0x12, 0x10000, 0, 0);
-    	if(new_thid) {
-    		printf("Starting sound thread...\n");
-    		sceKernelStartThread(new_thid, 0, NULL);
-    	}
+#ifdef SOUND_ENABLED
+    	PSPAudioPlay();
+#endif
 
     	while(CurGame) {//FCEUI_CloseGame turns this false
     		DoFun();
     	}
 
-    	//sceKernelTerminateDeleteThread(new_thid);
-    	sceKernelTerminateThread(new_thid);
-    	sceKernelWaitThreadEnd(new_thid,NULL);
-    	sceKernelDeleteThread(new_thid);
-    	sceAudioChRelease(chan);
+#ifdef SOUND_ENABLED
+    	PSPAudioStop();
+#endif
     }
+
+#ifdef SOUND_ENABLED
+    PSPAudioFinish();
+#endif
 
 	sceGuTerm();
 
@@ -118,41 +106,15 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 	PSPInputReadPad();
 
 	if(endgame) {
-		sceKernelSignalSema(has_audio, 0);
 		FCEUI_CloseGame();
 		CurGame=0;
 		endgame = 0;
 	}
 
 #ifdef SOUND_ENABLED
-	tmpsnd_ = tmpsnd;
-	ssize_ = ssize;
-	sceKernelSignalSema(has_audio, 1);
+	PSPAudioAddSamples(tmpsnd, ssize);
 #endif
 
-}
-
-void PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
-	printf("Sound thread started!\n");
-
-	sceKernelWaitSema(has_audio, 1, 0);
-
-	for(;;) {
-		s16 ssound[ssize_<<1];
-		int i, j = 0;
-		u16 sample;
-
-		for( i = 0; i < ssize_<<1; i+=2 )
-		{
-			sample = tmpsnd_[j++];
-			ssound[i] = sample;
-			ssound[i+1] = sample;
-		}
-
-		sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);
-
-		printf("%d\n", ssize_);
-	}
 }
 
 void DoFun()
