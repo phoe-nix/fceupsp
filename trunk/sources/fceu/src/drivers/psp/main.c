@@ -34,7 +34,8 @@ int SetupCallbacks(void);
 void PSPSoundOutput(int32 *tmpsnd, int32 ssize);
 int chan;
 int32 *tmpsnd_;
-int32 ssize_;
+int32 ssize_ = 0;
+SceUID has_audio;
 
 int main(int argc, char *argv[])
 {
@@ -64,6 +65,8 @@ int main(int argc, char *argv[])
 #endif
 
     FCEUGI *tmp;
+
+    has_audio = sceKernelCreateSema("has_audio", 0, 0, 1, 0);
 
     for(;;) {
     	pspDebugScreenInit();
@@ -115,6 +118,7 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 	PSPInputReadPad();
 
 	if(endgame) {
+		sceKernelSignalSema(has_audio, 0);
 		FCEUI_CloseGame();
 		CurGame=0;
 		endgame = 0;
@@ -123,11 +127,16 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 #ifdef SOUND_ENABLED
 	tmpsnd_ = tmpsnd;
 	ssize_ = ssize;
+	sceKernelSignalSema(has_audio, 1);
 #endif
 
 }
 
 void PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
+	printf("Sound thread started!\n");
+
+	sceKernelWaitSema(has_audio, 1, 0);
+
 	for(;;) {
 		s16 ssound[ssize_<<1];
 		int i, j = 0;
@@ -139,8 +148,10 @@ void PSPSoundOutput(int32 *tmpsnd, int32 ssize) {
 			ssound[i] = sample;
 			ssound[i+1] = sample;
 		}
+
 		sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, ssound);
-		//printf("%d\n", ssize_);
+
+		printf("%d\n", ssize_);
 	}
 }
 
