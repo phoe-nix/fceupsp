@@ -34,18 +34,20 @@ int PSPAudioGetAvailableSamples() {
 }
 
 void PSPAudioAddSamples(int32 *samples, int32 count) {
-	int i;
+	int i, j;
 
-	for(i = 0; i < count; i++) {
-		audio_buffer[(i + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
+	for(i = 0, j = 0; i < count; i++, j+=2) {
+		//audio_buffer[(i + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
+		audio_buffer[(j + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
+		audio_buffer[(j+1 + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
 	}
 
-	end = audio_buffer + ((count + end - audio_buffer) % BUF_LEN);
+	end = audio_buffer + ((count*2 + end - audio_buffer) % BUF_LEN);
 
 	// Shift the start buffer to the right if we're inserting too much data.
-	if(count >= BUF_LEN) {
-		start = audio_buffer + ((end - audio_buffer + 1) % BUF_LEN);
-	}
+//	if(count*2 >= BUF_LEN) {
+//		start = audio_buffer + ((end - audio_buffer + 1) % BUF_LEN);
+//	}
 }
 
 void PSPAudioGetSamples(u16 *samples, int32 count) {
@@ -71,12 +73,13 @@ void PSPAudioPlayThread() {
 	sceKernelWaitSema(can_play, 1, 0);
 
 	for(;;) {
-		if(sceKernelPollSema(can_play, 1) < 0)
-			continue;
+//		if(sceKernelPollSema(can_play, 1) < 0)
+//			continue;
 
 		PSPAudioGetSamples(s, CHUNK_LEN);
 
 		sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, s);
+		printf("Available samples: %d\n", PSPAudioGetAvailableSamples());
 	}
 }
 
