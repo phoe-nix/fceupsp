@@ -80,6 +80,7 @@ int main(int argc, char *argv[])
     	PSPAudioPlay();
 #endif
 
+    	printf("Before main loop\n");
     	while(CurGame) {//FCEUI_CloseGame turns this false
     		DoFun();
     	}
@@ -113,6 +114,7 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 
 #ifdef SOUND_ENABLED
 	PSPAudioAddSamples(tmpsnd, ssize);
+	//printf("Added %d audio samples.\n", ssize);
 #endif
 
 }
