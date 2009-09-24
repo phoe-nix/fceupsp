@@ -26,7 +26,7 @@ SceUID can_play;
 SceUID new_thid;
 
 
-int PSPAudioGetAvailableSamples() {
+u64 PSPAudioGetAvailableSamples() {
 //	if(start == end)
 //		return 0;
 //
@@ -69,9 +69,11 @@ void PSPAudioGetSamples(u16 *samples, int32 count) {
 		}
 	}
 
-	start = audio_buffer + ((count + start - audio_buffer) % BUF_LEN);
+	int samples_played = ((int)samples_available < count) ? (int)samples_available : count;
 
-	read_count += count;
+	start = audio_buffer + ((samples_played + start - audio_buffer) % BUF_LEN);
+
+	read_count += samples_played;
 }
 
 void PSPAudioPlayThread() {
@@ -80,8 +82,10 @@ void PSPAudioPlayThread() {
 	sceKernelWaitSema(can_play, 1, 0);
 
 	for(;;) {
-//		if(sceKernelPollSema(can_play, 1) < 0)
+//		if(sceKernelPollSema(can_play, 1) < 0) {
+//			sceKernelSleepThread();
 //			continue;
+//		}
 
 		PSPAudioGetSamples(s, CHUNK_LEN);
 
