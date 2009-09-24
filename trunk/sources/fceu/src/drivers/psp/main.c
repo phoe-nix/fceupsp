@@ -87,6 +87,7 @@ int main(int argc, char *argv[])
 
 #ifdef SOUND_ENABLED
     	PSPAudioStop();
+    	PSPAudioReset();
 #endif
     }
 

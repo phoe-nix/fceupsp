@@ -99,6 +99,12 @@ void PSPAudioPlay() {
 	sceKernelWakeupThread(new_thid);
 }
 
+void PSPAudioReset() {
+	memset(audio_buffer, 0, sizeof(u16) * BUF_LEN);
+	start = 0;
+	end = 0;
+	added_some_data = 0;
+}
 
 void PSPAudioInit() {
 	memset(audio_buffer, 0, sizeof(u16) * BUF_LEN);
