@@ -16,8 +16,8 @@
 
 u16 audio_buffer[BUF_LEN];
 
-u16 *start = audio_buffer;
-u16 *end = audio_buffer;
+int start = 0;
+int end = 0;
 int chan = -1;
 int added_some_data = 0;
 
@@ -33,16 +33,19 @@ int PSPAudioGetAvailableSamples() {
 }
 
 void PSPAudioAddSamples(u16 *samples, int32 count) {
-	int i;
+	int i, real_i;
 
 	for(i = 0; i < count; i++) {
-		audio_buffer[(i + end - audio_buffer) % BUF_LEN] = samples[i];
-		if(added_some_data && ((i + end) == start)) {
-			start = audio_buffer + ((i + end - audio_buffer + 1) % BUF_LEN);
+		real_i = (i + end) % BUF_LEN;
+
+		audio_buffer[real_i] = samples[i];
+
+		if(added_some_data && (real_i == start)) {
+			start = (real_i + 1) % BUF_LEN;
 		}
 	}
 
-	end = audio_buffer + ((count + end - audio_buffer) % BUF_LEN);
+	end = (count + end) % BUF_LEN;
 
 	added_some_data = 1;
 }
@@ -59,14 +62,14 @@ void PSPAudioGetSamples(u16 *samples, int32 count) {
 
 	for(i = 0; i < count; i++) {
 //		if(i < samples_available) {
-			samples[i] = audio_buffer[(i + start - audio_buffer) % BUF_LEN];
+			samples[i] = audio_buffer[(i + start) % BUF_LEN];
 //			last_sample = samples[i];
 //		} else {
 //			samples[i] = last_sample;
 //		}
 	}
 
-	start = audio_buffer + ((count + start - audio_buffer) % BUF_LEN);
+	start = (count + start) % BUF_LEN;
 }
 
 void PSPAudioPlayThread() {
