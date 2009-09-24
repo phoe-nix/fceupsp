@@ -9,5 +9,7 @@ void PSPAudioStop();
 void PSPAudioPlay();
 void PSPAudioInit();
 void PSPAudioFinish();
+void PSPAudioReset();
+int PSPAudioGetAvailableSamples();
 
 #endif /* PSPAUDIO_H_ */
