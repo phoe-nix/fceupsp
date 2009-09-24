@@ -12,12 +12,12 @@
 #include "pspaudio.h"
 
 #define BUF_LEN 4096
-#define CHUNK_LEN 512
+#define CHUNK_LEN 734
 
 u16 audio_buffer[BUF_LEN];
 
-int read_count = 0;
-int write_count = 0;
+u64 read_count = 0;
+u64 write_count = 0;
 u16 *start = audio_buffer;
 u16 *end = audio_buffer;
 int chan = -1;
@@ -27,25 +27,30 @@ SceUID new_thid;
 
 
 int PSPAudioGetAvailableSamples() {
-	if(start == end)
-		return 0;
-
-	return (BUF_LEN + end - start) % BUF_LEN;
+//	if(start == end)
+//		return 0;
+//
+//	return (BUF_LEN + end - start) % BUF_LEN;
+	u64 s = write_count - read_count;
+	if(s < 0)
+		return s * -1;
+	else
+		return s;
 }
 
 void PSPAudioAddSamples(int32 *samples, int32 count) {
-	int i, j;
+	int i;
 
-	for(i = 0, j = 0; i < count; i++, j+=2) {
-		//audio_buffer[(i + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
-		audio_buffer[(j + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
-		audio_buffer[(j+1 + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
+	for(i = 0; i < count; i++) {
+		audio_buffer[(i + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
 	}
 
-	end = audio_buffer + ((count*2 + end - audio_buffer) % BUF_LEN);
+	end = audio_buffer + ((count + end - audio_buffer) % BUF_LEN);
+
+	write_count += count;
 
 	// Shift the start buffer to the right if we're inserting too much data.
-//	if(count*2 >= BUF_LEN) {
+//	if(count >= BUF_LEN) {
 //		start = audio_buffer + ((end - audio_buffer + 1) % BUF_LEN);
 //	}
 }
@@ -53,7 +58,7 @@ void PSPAudioAddSamples(int32 *samples, int32 count) {
 void PSPAudioGetSamples(u16 *samples, int32 count) {
 	int i;
 	u16 last_sample = 0;
-	int samples_available = PSPAudioGetAvailableSamples();
+	u64 samples_available = PSPAudioGetAvailableSamples();
 
 	for(i = 0; i < count; i++) {
 		if(i < samples_available) {
@@ -65,6 +70,8 @@ void PSPAudioGetSamples(u16 *samples, int32 count) {
 	}
 
 	start = audio_buffer + ((count + start - audio_buffer) % BUF_LEN);
+
+	read_count += count;
 }
 
 void PSPAudioPlayThread() {
