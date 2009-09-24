@@ -113,15 +113,24 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 	}
 
 #ifdef SOUND_ENABLED
-	u16 s[ssize * 2];
+	// Create a 768 samples array. Last sample will be used for padding.
+	int padcount = 768 - (ssize * 2);
+	u16 last_sample = 0;
+	u16 s[768];
 	int i, j;
 
 	for(i = 0, j = 0; i < ssize; i++, j+=2) {
-		s[j] = tmpsnd[i];
-		s[j + 1] = tmpsnd[i];
+		s[j] = (u16)tmpsnd[i];
+		s[j + 1] = (u16)tmpsnd[i];
+		last_sample = (u16)tmpsnd[i];
 	}
 
-	PSPAudioAddSamples(s, ssize * 2);
+	for(i = 0, j = 0; i < padcount; i++, j+=2) {
+		s[ssize * 2 + j]     = last_sample;
+		s[ssize * 2 + j + 1] = last_sample;
+	}
+
+	PSPAudioAddSamples(s, 768);
 	//printf("Added %d audio samples.\n", ssize);
 #endif
 

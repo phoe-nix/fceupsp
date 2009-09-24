@@ -12,68 +12,61 @@
 #include "pspaudio.h"
 
 #define BUF_LEN 4096
-#define CHUNK_LEN 734
+#define CHUNK_LEN 768
 
 u16 audio_buffer[BUF_LEN];
 
-u64 read_count = 0;
-u64 write_count = 0;
 u16 *start = audio_buffer;
 u16 *end = audio_buffer;
 int chan = -1;
+int added_some_data = 0;
 
 SceUID can_play;
 SceUID new_thid;
 
 
-u64 PSPAudioGetAvailableSamples() {
-//	if(start == end)
-//		return 0;
-//
-//	return (BUF_LEN + end - start) % BUF_LEN;
-	u64 s = write_count - read_count;
-	if(s < 0)
-		return s * -1;
-	else
-		return s;
+int PSPAudioGetAvailableSamples() {
+	if(start == end)
+		return 0;
+
+	return (BUF_LEN + end - start) % BUF_LEN;
 }
 
-void PSPAudioAddSamples(int32 *samples, int32 count) {
+void PSPAudioAddSamples(u16 *samples, int32 count) {
 	int i;
 
 	for(i = 0; i < count; i++) {
-		audio_buffer[(i + end - audio_buffer) % BUF_LEN] = (u16)samples[i];
+		audio_buffer[(i + end - audio_buffer) % BUF_LEN] = samples[i];
+		if(added_some_data && ((i + end) == start)) {
+			start = audio_buffer + ((i + end - audio_buffer + 1) % BUF_LEN);
+		}
 	}
 
 	end = audio_buffer + ((count + end - audio_buffer) % BUF_LEN);
 
-	write_count += count;
-
-	// Shift the start buffer to the right if we're inserting too much data.
-//	if(count >= BUF_LEN) {
-//		start = audio_buffer + ((end - audio_buffer + 1) % BUF_LEN);
-//	}
+	added_some_data = 1;
 }
 
 void PSPAudioGetSamples(u16 *samples, int32 count) {
 	int i;
-	u16 last_sample = 0;
-	u64 samples_available = PSPAudioGetAvailableSamples();
+//	u16 last_sample = 0;
+	int samples_available;
+
+	memset(samples, 0, sizeof(u16) * count);
+
+	if((samples_available = PSPAudioGetAvailableSamples()) < count)
+		return;
 
 	for(i = 0; i < count; i++) {
-		if(i < samples_available) {
+//		if(i < samples_available) {
 			samples[i] = audio_buffer[(i + start - audio_buffer) % BUF_LEN];
-			last_sample = samples[i];
-		} else {
-			samples[i] = last_sample;
-		}
+//			last_sample = samples[i];
+//		} else {
+//			samples[i] = last_sample;
+//		}
 	}
 
-	int samples_played = ((int)samples_available < count) ? (int)samples_available : count;
-
-	start = audio_buffer + ((samples_played + start - audio_buffer) % BUF_LEN);
-
-	read_count += samples_played;
+	start = audio_buffer + ((count + start - audio_buffer) % BUF_LEN);
 }
 
 void PSPAudioPlayThread() {
@@ -82,10 +75,10 @@ void PSPAudioPlayThread() {
 	sceKernelWaitSema(can_play, 1, 0);
 
 	for(;;) {
-//		if(sceKernelPollSema(can_play, 1) < 0) {
-//			sceKernelSleepThread();
+		if(sceKernelPollSema(can_play, 1) < 0) {
+			sceKernelSleepThread();
 //			continue;
-//		}
+		}
 
 		PSPAudioGetSamples(s, CHUNK_LEN);
 
@@ -100,6 +93,7 @@ void PSPAudioStop() {
 
 void PSPAudioPlay() {
 	sceKernelSignalSema(can_play, 1);
+	sceKernelWakeupThread(new_thid);
 }
 
 
@@ -110,7 +104,7 @@ void PSPAudioInit() {
 
 	can_play = sceKernelCreateSema("can_play", 0, 0, 1, 0);
 
-	new_thid = sceKernelCreateThread("audio_thread", PSPAudioPlayThread, 0x12, 0x10000, 0, 0);
+	new_thid = sceKernelCreateThread("audio_thread",(SceKernelThreadEntry) PSPAudioPlayThread, 0x12, 0x10000, 0, 0);
 
 	if(new_thid) {
 		printf("Starting audio thread\n");

@@ -2,7 +2,7 @@
 #define PSPAUDIO_H_
 
 /* Function Prototypes */
-void PSPAudioAddSamples(int32 *samples, int32 count);
+void PSPAudioAddSamples(u16 *samples, int32 count);
 void PSPAudioGetSamples(u16 *samples, int32 count);
 void PSPAudioPlayThread();
 void PSPAudioStop();
