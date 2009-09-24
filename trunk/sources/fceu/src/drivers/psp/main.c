@@ -113,7 +113,15 @@ void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
 	}
 
 #ifdef SOUND_ENABLED
-	PSPAudioAddSamples(tmpsnd, ssize);
+	u16 s[ssize * 2];
+	int i, j;
+
+	for(i = 0, j = 0; i < ssize; i++, j+=2) {
+		s[j] = tmpsnd[i];
+		s[j + 1] = tmpsnd[i];
+	}
+
+	PSPAudioAddSamples(s, ssize * 2);
 	//printf("Added %d audio samples.\n", ssize);
 #endif
 
