@@ -12,7 +12,7 @@
 #include "pspaudio.h"
 
 #define BUF_LEN 10240
-#define CHUNK_LEN 768
+#define CHUNK_LEN 512
 
 u16 audio_buffer[BUF_LEN];
 
@@ -77,15 +77,15 @@ void PSPAudioPlayThread() {
 	sceKernelWaitSema(can_play, 1, 0);
 
 	for(;;) {
-		if(sceKernelPollSema(can_play, 1) < 0) {
-			sceKernelSleepThread();
+//		if(sceKernelPollSema(can_play, 1) < 0) {
+//			sceKernelSleepThread();
 //			continue;
-		}
+//		}
 
 		PSPAudioGetSamples(s, CHUNK_LEN);
 
 		sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, s);
-		printf("Available samples: %d\n", PSPAudioGetAvailableSamples());
+		//printf("Available samples: %d\n", PSPAudioGetAvailableSamples());
 	}
 }
 
@@ -95,7 +95,7 @@ void PSPAudioStop() {
 
 void PSPAudioPlay() {
 	sceKernelSignalSema(can_play, 1);
-	sceKernelWakeupThread(new_thid);
+//	sceKernelWakeupThread(new_thid);
 }
 
 void PSPAudioReset() {
