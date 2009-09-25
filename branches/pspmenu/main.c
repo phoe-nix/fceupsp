@@ -90,13 +90,16 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 	/* Return value (the option index or -1 if cancelled by the user */
 	int retval = -1;
 
+//	pspDebugScreenPrintf("%d", option_count);
+//	return;
+
 	/* Menu navigation main loop */
 	for(;;) {
 
 		/* Show currently viewable items */
 		y = y1;
 
-		for(item = first_viewable_item; item <= (last_viewable_item >= option_count)?option_count-1:last_viewable_item; item++) {
+		for(item = first_viewable_item; item <= ((last_viewable_item >= option_count)?option_count-1:last_viewable_item); item++) {
 			/* "Line feed" */
 			pspDebugScreenSetXY(x1, y);
 
@@ -110,7 +113,7 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 			}
 
 			/* Print the menu option */
-			pspDebugScreenPrintf(print_mask, *(options + item * option_max_width));
+			pspDebugScreenPrintf(print_mask, (options + item * option_max_width));
 
 			y++;
 		}
@@ -153,6 +156,9 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 
 	}
 
+	pspDebugScreenSetBackColor(0x00000000);
+	pspDebugScreenSetTextColor(0xFFFFFFFF);
+
 	return retval;
 }
 
@@ -166,9 +172,9 @@ int main(int argc, char *argv[])
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
-	char options[5][10] = {"Abacate", "Melancia", "Abobora", "Pessego", "Alface"};
+	char options[5][20] = {"Abacate ", "Melancia", "Abobora ", "Pessego ", "Alface  "};
 
-	int option = menubox(0, 0, 10, 2, options, 5, 10, 0);
+	int option = menubox(0, 0, 10, 2, &options[0][0], 5, 20, 0);
 
 	pspDebugScreenSetXY(0, 30);
 	pspDebugScreenPrintf("%d", option);
