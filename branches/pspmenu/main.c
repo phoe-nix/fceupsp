@@ -15,8 +15,7 @@
 #include <pspkernel.h>
 #include <pspdebug.h>
 #include <pspctrl.h>
-
-#define ITEMS_COUNT 5
+#include <stdio.h>
 
 /* Define the module info section */
 PSP_MODULE_INFO("template", 0, 1, 1);
@@ -62,6 +61,102 @@ int SetupCallbacks(void)
 
 //-------------------------------------------------------------------------------------------
 
+int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int option_max_width, int initial_selected_item) {
+	/* Used to format a printf mask so we can print option_max_width chars from options*/
+	char print_mask[20];
+
+	/* Pad reading variables*/
+	SceCtrlData pad;
+	int old_buttons = 0;
+
+	/* How many options we can print (lines) inside the menu */
+	int how_many_items_can_show = y2 - y1 + 1;
+
+	/* Both below are moved according to the user navigations through the options */
+	int first_viewable_item = initial_selected_item;
+	int last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
+
+	/* Currently selected item */
+	int curr_item = initial_selected_item;
+
+	/* Contruct the printf mask for delimited options output */
+	int max_item_width = x2 - x1 + 1;
+	sprintf(print_mask, "%%.%ds", max_item_width);
+
+	/* Menu navigation/printing variables */
+	int y;
+	int item;
+
+	/* Return value (the option index or -1 if cancelled by the user */
+	int retval = -1;
+
+	/* Menu navigation main loop */
+	for(;;) {
+
+		/* Show currently viewable items */
+		y = y1;
+
+		for(item = first_viewable_item; item <= (last_viewable_item >= option_count)?option_count-1:last_viewable_item; item++) {
+			/* "Line feed" */
+			pspDebugScreenSetXY(x1, y);
+
+			/* Highligts the selected item. Doesn't highlight the other ones */
+			if(item == curr_item) {
+				pspDebugScreenSetBackColor(0xFFFFFFFF);
+				pspDebugScreenSetTextColor(0x00000000);
+			} else {
+				pspDebugScreenSetBackColor(0x00000000);
+				pspDebugScreenSetTextColor(0xFFFFFFFF);
+			}
+
+			/* Print the menu option */
+			pspDebugScreenPrintf(print_mask, options[item]);
+
+			y++;
+		}
+
+		/* Checks for user selection */
+		sceCtrlReadBufferPositive(&pad, 1);
+
+		if (pad.Buttons != old_buttons){
+			if (pad.Buttons & PSP_CTRL_UP) {
+				if(curr_item > 0) {
+					curr_item--;
+					if(curr_item < first_viewable_item || curr_item > last_viewable_item) {
+						first_viewable_item--;
+						last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
+					}
+				}
+			}
+
+			if (pad.Buttons & PSP_CTRL_DOWN) {
+				if(curr_item < ITEMS_COUNT-1) {
+					curr_item++;
+					if(curr_item < first_viewable_item || curr_item > last_viewable_item) {
+						first_viewable_item++;
+						last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
+					}
+				}
+			}
+
+			if (pad.Buttons & PSP_CTRL_CROSS) {
+				retval = curr_item;
+				break;
+			}
+
+			if (pad.Buttons & PSP_CTRL_CIRCLE) {
+				break;
+			}
+
+			old_buttons = pad.Buttons;
+		}
+
+	}
+
+	return retval;
+}
+
+
 int main(int argc, char *argv[])
 {
 	SetupCallbacks();
@@ -71,64 +166,12 @@ int main(int argc, char *argv[])
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
-	char options[ITEMS_COUNT][10] = {"Abacate", "Melancia", "Abobora", "Pessego", "Alface"};
-	int x1, y1, x2, y2;
-	SceCtrlData pad;
-	int old_buttons = 0;
+	char options[5][10] = {"Abacate", "Melancia", "Abobora", "Pessego", "Alface"};
 
-	x1 = 0; y1 = 0;
-	x2 = 10; y2 = 2;
+	int option = menubox(0, 0, 10, 2, options, 5, 10, 0);
 
-	int how_many_items_can_show = y2 - y1 + 1;
-	int first_viewable_item = 0; // last one is: first_viewable_item + how_many_items_can_show - 1
-	int last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
-	int curr_item = 0; // Currently selected item
-	int start_item = curr_item % how_many_items_can_show;
-
-	int max_item_width = x2 - x1 + 1;
-
-	int x, y;
-	int item;
-
-	for(;;) {
-		// Show currently viewable items
-		y = y1;
-		for(item = first_viewable_item; item <= (last_viewable_item >= ITEMS_COUNT)?ITEMS_COUNT-1:last_viewable_item; item++) {
-			pspDebugScreenSetXY(x1, y);
-
-			if(item == curr_item) {
-				pspDebugScreenSetBackColor(0xFFFFFFFF);
-				pspDebugScreenSetTextColor(0x00000000);
-			} else {
-				pspDebugScreenSetBackColor(0x00000000);
-				pspDebugScreenSetTextColor(0xFFFFFFFF);
-			}
-
-			pspDebugScreenPrintf("%s", options[item]);
-
-			y++;
-		}
-
-		sceCtrlReadBufferPositive(&pad, 1);
-
-		if (pad.Buttons != old_buttons){
-			if (pad.Buttons & PSP_CTRL_UP) {
-				if(curr_item > 0) {
-					curr_item--;
-
-				}
-			}
-
-			if (pad.Buttons & PSP_CTRL_DOWN) {
-				if(curr_item < ITEMS_COUNT-1) {
-					curr_item++;
-				}
-			}
-
-			old_buttons = pad.Buttons;
-		}
-
-	}
+	pspDebugScreenSetXY(0, 30);
+	pspDebugScreenPrintf("%d", option);
 
 	return 0;
 }
