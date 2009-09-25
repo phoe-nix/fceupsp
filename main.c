@@ -110,7 +110,7 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 			}
 
 			/* Print the menu option */
-			pspDebugScreenPrintf(print_mask, options[item]);
+			pspDebugScreenPrintf(print_mask, *(options + item * option_max_width));
 
 			y++;
 		}
@@ -130,7 +130,7 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 			}
 
 			if (pad.Buttons & PSP_CTRL_DOWN) {
-				if(curr_item < ITEMS_COUNT-1) {
+				if(curr_item < option_count-1) {
 					curr_item++;
 					if(curr_item < first_viewable_item || curr_item > last_viewable_item) {
 						first_viewable_item++;
