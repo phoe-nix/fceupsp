@@ -35,51 +35,51 @@ void PSPInputReadPad() {
 	if (pad.Buttons != old_buttons){
 		if (pad.Buttons & PSP_CTRL_SQUARE){
 			buttons |= JOY_B;
-			printf("Square pressed \n");
+			//printf("Square pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_TRIANGLE){
-			printf("Triangle pressed \n");
+			//printf("Triangle pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_CIRCLE){
-			printf("Cicle pressed \n");
+			//printf("Cicle pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_CROSS){
 			buttons |= JOY_A;
-			printf("Cross pressed \n");
+			//printf("Cross pressed \n");
 		}
 
 		if (pad.Buttons & PSP_CTRL_UP){
 			buttons |= JOY_UP;
-			printf("Up pressed \n");
+			//printf("Up pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_DOWN){
 			buttons |= JOY_DOWN;
-			printf("Down pressed \n");
+			//printf("Down pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_LEFT){
 			buttons |= JOY_LEFT;
-			printf("Left pressed \n");
+			//printf("Left pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_RIGHT){
 			buttons |= JOY_RIGHT;
-			printf("Right pressed \n");
+			//printf("Right pressed \n");
 		}
 
 		if (pad.Buttons & PSP_CTRL_START){
 			buttons |= JOY_START;
-			printf("Start pressed \n");
+			//printf("Start pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_SELECT){
 			buttons |= JOY_SELECT;
-			printf("Select pressed \n");
+			//printf("Select pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_LTRIGGER){
 			endgame = 1;
-			printf("L-trigger pressed \n");
+			//printf("L-trigger pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_RTRIGGER){
 			PSPVideoToggleScreen();
-			printf("R-trigger pressed \n");
+			//printf("R-trigger pressed \n");
 		}
 
 		old_buttons = pad.Buttons;
