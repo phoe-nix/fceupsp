@@ -124,6 +124,7 @@ read_pad:
 		sceCtrlReadBufferPositive(&pad, 1);
 		pad_data = pad.Buttons;
 
+		/* Didn't read anything. Retry it */
 		if(pad_data == 0) {
 			old_pad = 0;
 			goto read_pad;
@@ -132,10 +133,10 @@ read_pad:
 		if(clock() > rpt_time || old_pad != pad_data) {
 
 			if(old_pad != pad_data) {
-				rpt_time = clock() + 400 * 1000;
+				rpt_time = clock() + 400 * 1000; // 400ms
 				old_pad = pad_data;
 			} else {
-				rpt_time = clock() + 40 * 1000;
+				rpt_time = clock() + 40 * 1000; // 40ms
 			}
 
 			if (pad_data & PSP_CTRL_UP) {
@@ -146,6 +147,11 @@ read_pad:
 						last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
 					}
 				}
+//				else {
+//					curr_item = option_count - 1;
+//					first_viewable_item = option_count - 1;
+//					last_viewable_item = option_count - 1;
+//				}
 			}
 
 			if (pad_data & PSP_CTRL_DOWN) {
@@ -156,6 +162,11 @@ read_pad:
 						last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
 					}
 				}
+//				else {
+//					curr_item = 0;
+//					first_viewable_item = 0;
+//					last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
+//				}
 			}
 
 			if (pad_data & PSP_CTRL_CROSS) {
