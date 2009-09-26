@@ -16,6 +16,7 @@
 #include <pspdebug.h>
 #include <pspctrl.h>
 #include <stdio.h>
+#include <time.h>
 
 /* Define the module info section */
 PSP_MODULE_INFO("template", 0, 1, 1);
@@ -67,7 +68,9 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 
 	/* Pad reading variables*/
 	SceCtrlData pad;
-	int old_buttons = 0;
+	int old_pad = 0;
+	int pad_data = 0;
+	long rpt_time = 0;
 
 	/* How many options we can print (lines) inside the menu */
 	int how_many_items_can_show = y2 - y1 + 1;
@@ -89,9 +92,6 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 
 	/* Return value (the option index or -1 if cancelled by the user */
 	int retval = -1;
-
-//	pspDebugScreenPrintf("%d", option_count);
-//	return;
 
 	/* Menu navigation main loop */
 	for(;;) {
@@ -118,11 +118,27 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 			y++;
 		}
 
-		/* Checks for user selection */
-		sceCtrlReadBufferPositive(&pad, 1);
+		/* Checks for user selection. Created this label (Ugh!) to avoid menu flickering */
+read_pad:
 
-		if (pad.Buttons != old_buttons){
-			if (pad.Buttons & PSP_CTRL_UP) {
+		sceCtrlReadBufferPositive(&pad, 1);
+		pad_data = pad.Buttons;
+
+		if(pad_data == 0) {
+			old_pad = 0;
+			goto read_pad;
+		}
+
+		if(clock() > rpt_time || old_pad != pad_data) {
+
+			if(old_pad != pad_data) {
+				rpt_time = clock() + 400 * 1000;
+				old_pad = pad_data;
+			} else {
+				rpt_time = clock() + 40 * 1000;
+			}
+
+			if (pad_data & PSP_CTRL_UP) {
 				if(curr_item > 0) {
 					curr_item--;
 					if(curr_item < first_viewable_item || curr_item > last_viewable_item) {
@@ -132,7 +148,7 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 				}
 			}
 
-			if (pad.Buttons & PSP_CTRL_DOWN) {
+			if (pad_data & PSP_CTRL_DOWN) {
 				if(curr_item < option_count-1) {
 					curr_item++;
 					if(curr_item < first_viewable_item || curr_item > last_viewable_item) {
@@ -142,16 +158,15 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 				}
 			}
 
-			if (pad.Buttons & PSP_CTRL_CROSS) {
+			if (pad_data & PSP_CTRL_CROSS) {
 				retval = curr_item;
 				break;
 			}
 
-			if (pad.Buttons & PSP_CTRL_CIRCLE) {
+			if (pad_data & PSP_CTRL_CIRCLE) {
 				break;
 			}
 
-			old_buttons = pad.Buttons;
 		}
 
 	}
@@ -173,6 +188,7 @@ int main(int argc, char *argv[])
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
 	char options[5][20] = {"Abacate ", "Melancia", "Abobora ", "Pessego ", "Alface  "};
+	//char options[1][20] = {"Abacate "};
 
 	int option = menubox(0, 0, 10, 2, &options[0][0], 5, 20, 0);
 
