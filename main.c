@@ -62,6 +62,35 @@ int SetupCallbacks(void)
 
 //-------------------------------------------------------------------------------------------
 
+void drawbox(int x1, int y1, int x2, int y2, char draw_char, int clear_inside, int inverted_colors) {
+	int x, y;
+
+	for(x = x1; x <= x2; x++) {
+		for(y = y1; y <= y2; y++) {
+			pspDebugScreenSetXY(x, y);
+			if(x == x1 || x == x2 || y == y1 || y == y2) {
+
+				if(inverted_colors) {
+					pspDebugScreenSetBackColor(0x77777777);
+					pspDebugScreenSetTextColor(0x00000000);
+				}
+
+				pspDebugScreenPrintf("%c", draw_char);
+			} else {
+
+				if(clear_inside) {
+					pspDebugScreenSetBackColor(0x00000000);
+					pspDebugScreenSetTextColor(0xFFFFFFFF);
+					pspDebugScreenPrintf("%c", ' ');
+				}
+			}
+		}
+	}
+
+	pspDebugScreenSetBackColor(0x00000000);
+	pspDebugScreenSetTextColor(0xFFFFFFFF);
+}
+
 int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int option_max_width, int initial_selected_item) {
 	/* Used to format a printf mask so we can print option_max_width chars from options*/
 	char print_mask[20];
@@ -188,7 +217,6 @@ read_pad:
 	return retval;
 }
 
-
 int main(int argc, char *argv[])
 {
 	SetupCallbacks();
@@ -198,10 +226,11 @@ int main(int argc, char *argv[])
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
-	char options[5][20] = {"Abacate ", "Melancia", "Abobora ", "Pessego ", "Alface  "};
+	char options[5][20] = {"Abacate    ", "Melancia   ", "Abobora    ", "Pessego    ", "Alface     "};
 	//char options[1][20] = {"Abacate "};
 
-	int option = menubox(0, 0, 10, 2, &options[0][0], 5, 20, 0);
+	drawbox(0, 0, 12, 4, ' ', 1, 1);
+	int option = menubox(1, 1, 11, 3, &options[0][0], 5, 20, 0);
 
 	pspDebugScreenSetXY(0, 30);
 	pspDebugScreenPrintf("%d", option);
