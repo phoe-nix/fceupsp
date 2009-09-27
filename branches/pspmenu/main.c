@@ -62,36 +62,36 @@ int SetupCallbacks(void)
 
 //-------------------------------------------------------------------------------------------
 
-void drawbox(int x1, int y1, int x2, int y2, char draw_char, int clear_inside, int inverted_colors) {
+void drawbox(int x1, int y1, int x2, int y2, char border_char, char fill_char, u32 border_text_color, u32 border_back_color, u32 fill_text_color, u32 fill_back_color) {
 	int x, y;
 
 	for(x = x1; x <= x2; x++) {
 		for(y = y1; y <= y2; y++) {
+
 			pspDebugScreenSetXY(x, y);
+
+			/* Borders */
 			if(x == x1 || x == x2 || y == y1 || y == y2) {
 
-				if(inverted_colors) {
-					pspDebugScreenSetBackColor(0x77777777);
-					pspDebugScreenSetTextColor(0x00000000);
-				}
+				pspDebugScreenSetBackColor(border_back_color);
+				pspDebugScreenSetTextColor(border_text_color);
 
-				pspDebugScreenPrintf("%c", draw_char);
+				pspDebugScreenPrintf("%c", border_char);
 			} else {
-
-				if(clear_inside) {
-					pspDebugScreenSetBackColor(0x00000000);
-					pspDebugScreenSetTextColor(0xFFFFFFFF);
-					pspDebugScreenPrintf("%c", ' ');
-				}
+				/* Fill */
+				pspDebugScreenSetBackColor(fill_back_color);
+				pspDebugScreenSetTextColor(fill_text_color);
+				pspDebugScreenPrintf("%c", fill_char);
 			}
 		}
 	}
 
+	/* Set default colors back */
 	pspDebugScreenSetBackColor(0x00000000);
 	pspDebugScreenSetTextColor(0xFFFFFFFF);
 }
 
-int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int option_max_width, int initial_selected_item) {
+int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int option_max_width, int initial_selected_item, u32 normal_item_text_color, u32 normal_item_back_color, u32 selected_item_text_color, u32 selected_item_back_color) {
 	/* Used to format a printf mask so we can print option_max_width chars from options*/
 	char print_mask[20];
 
@@ -124,6 +124,8 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 
 	/* Menu navigation main loop */
 	for(;;) {
+		/* Clear region */
+		drawbox(x1, y1, x2, y2, ' ', ' ', 0x00000000, 0x00000000, 0x00000000, 0x00000000);
 
 		/* Show currently viewable items */
 		y = y1;
@@ -134,11 +136,11 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 
 			/* Highligts the selected item. Doesn't highlight the other ones */
 			if(item == curr_item) {
-				pspDebugScreenSetBackColor(0xFFFFFFFF);
-				pspDebugScreenSetTextColor(0x00000000);
+				pspDebugScreenSetBackColor(selected_item_back_color);
+				pspDebugScreenSetTextColor(selected_item_text_color);
 			} else {
-				pspDebugScreenSetBackColor(0x00000000);
-				pspDebugScreenSetTextColor(0xFFFFFFFF);
+				pspDebugScreenSetBackColor(normal_item_back_color);
+				pspDebugScreenSetTextColor(normal_item_text_color);
 			}
 
 			/* Print the menu option */
@@ -211,6 +213,7 @@ read_pad:
 
 	}
 
+	// Set default colors back
 	pspDebugScreenSetBackColor(0x00000000);
 	pspDebugScreenSetTextColor(0xFFFFFFFF);
 
@@ -229,8 +232,8 @@ int main(int argc, char *argv[])
 	char options[5][20] = {"Abacate    ", "Melancia   ", "Abobora    ", "Pessego    ", "Alface     "};
 	//char options[1][20] = {"Abacate "};
 
-	drawbox(0, 0, 12, 4, ' ', 1, 1);
-	int option = menubox(1, 1, 11, 3, &options[0][0], 5, 20, 0);
+	drawbox(0, 0, 12, 4, ' ', ' ', 0x77777777, 0x77777777, 0x00000000, 0x00000000);
+	int option = menubox(1, 1, 11, 3, &options[0][0], 5, 20, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
 	pspDebugScreenSetXY(0, 30);
 	pspDebugScreenPrintf("%d", option);
