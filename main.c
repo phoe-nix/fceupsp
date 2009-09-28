@@ -15,7 +15,10 @@
 #include <pspkernel.h>
 #include <pspdebug.h>
 #include <pspctrl.h>
+#include <pspge.h>
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 #include <time.h>
 
 /* Define the module info section */
@@ -23,6 +26,9 @@ PSP_MODULE_INFO("template", 0, 1, 1);
 
 /* Define the main thread's attribute value (optional) */
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
+
+// Sets new HEAP size for PRX (10MB)
+PSP_HEAP_SIZE_KB(10 * 1024);
 
 /* Exit callback */
 int exit_callback()
@@ -61,6 +67,67 @@ int SetupCallbacks(void)
 }
 
 //-------------------------------------------------------------------------------------------
+
+u32 * savescreen32(int x1, int y1, int x2, int y2) {
+	int x, y, i, j;
+	u32 color = 0xFFFFFFFF;
+
+	u32* save_buffer = malloc(sizeof(u32) * (x2 - x1 + 1) * (y2 - y1 + 1) * 8 * 8);
+
+	if(!save_buffer) {
+		printf("Error allocating buffer\n");
+		return NULL;
+	}
+
+	u32 *base_vram = (u32 *) (0x40000000 | (u32) sceGeEdramGetAddr());
+	u32 *vram = base_vram;
+
+	for(x = x1; x <= x2; x++) {
+		for(y = y1; y <= y2; y++) {
+			vram = (base_vram + x * 8) + (512 * y * 8);
+
+			// 8x8 square
+			for(i = 0; i < 8; i++) {
+				for(j = 0; j < 8; j++) {
+					*save_buffer++ = *(vram + j);
+					*(vram + j) = color;
+				}
+
+				vram += 512; // PSP_LINE_SIZE
+			}
+		}
+	}
+
+	return save_buffer;
+}
+
+void restorescreen32(int x1, int y1, int x2, int y2, u32 *save_buffer) {
+	int x, y, i, j;
+
+	if(!save_buffer) {
+		return;
+	}
+
+	u32 *base_vram = (u32 *) (0x40000000 | (u32) sceGeEdramGetAddr());
+	u32 *vram = base_vram;
+
+	for(x = x1; x <= x2; x++) {
+		for(y = y1; y <= y2; y++) {
+			vram = (base_vram + x * 8) + (512 * y * 8);
+
+			// 8x8 square
+			for(i = 0; i < 8; i++) {
+				for(j = 0; j < 8; j++) {
+					*(vram + j) = *save_buffer++;
+				}
+
+				vram += 512; // PSP_LINE_SIZE
+			}
+		}
+	}
+
+	free(save_buffer);
+}
 
 void drawbox(int x1, int y1, int x2, int y2, char border_char, char fill_char, u32 border_text_color, u32 border_back_color, u32 fill_text_color, u32 fill_back_color) {
 	int x, y;
@@ -111,7 +178,7 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 	/* Currently selected item */
 	int curr_item = initial_selected_item;
 
-	/* Contruct the printf mask for delimited options output */
+	/* Construct the printf mask for delimited options output */
 	int max_item_width = x2 - x1 + 1;
 	sprintf(print_mask, "%%.%ds", max_item_width);
 
@@ -134,7 +201,7 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 			/* "Line feed" */
 			pspDebugScreenSetXY(x1, y);
 
-			/* Highligts the selected item. Doesn't highlight the other ones */
+			/* Highlights the selected item. Doesn't highlight the other ones */
 			if(item == curr_item) {
 				pspDebugScreenSetBackColor(selected_item_back_color);
 				pspDebugScreenSetTextColor(selected_item_text_color);
@@ -218,6 +285,55 @@ read_pad:
 	pspDebugScreenSetTextColor(0xFFFFFFFF);
 
 	return retval;
+}
+
+int confirmationbox(char *message) {
+	int message_x = (68 - strlen(message)) / 2;
+	int retval = -1;
+	char options[2][4] = {"No ", "Yes"};
+
+	u32 *buffer = savescreen32(message_x - 1, 14, message_x + strlen(message), 18);
+
+	if(!buffer) {
+		return -1;
+	}
+
+	// Draw external border
+	drawbox(message_x - 1, 14, message_x + strlen(message), 18, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+
+	// Prints the message
+	pspDebugScreenSetXY(message_x, 15);
+	pspDebugScreenPrintf("%s", message);
+
+	// Draw menu
+	retval = menubox(32, 16, 34, 17, &options[0][0], 2, 4, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
+
+	restorescreen32(message_x - 1, 14, message_x + strlen(message), 18, buffer);
+
+	return retval;
+}
+
+void messagebox(char *message) {
+	int message_x = (68 - strlen(message)) / 2;
+	char options[1][3] = {"OK"};
+
+	u32 *buffer = savescreen32(message_x - 1, 14, message_x + strlen(message), 17);
+
+	if(!buffer) {
+		return;
+	}
+
+	// Draw external border
+	drawbox(message_x - 1, 14, message_x + strlen(message), 17, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+
+	// Prints the message
+	pspDebugScreenSetXY(message_x, 15);
+	pspDebugScreenPrintf("%s", message);
+
+	// Draw menu
+	menubox(32, 16, 33, 16, &options[0][0], 1, 3, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
+
+	restorescreen32(message_x - 1, 14, message_x + strlen(message), 17, buffer);
 }
 
 int main(int argc, char *argv[])
