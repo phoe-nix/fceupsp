@@ -125,7 +125,7 @@ int menubox(int x1, int y1, int x2, int y2, char *options, int option_count, int
 	/* Menu navigation main loop */
 	for(;;) {
 		/* Clear region */
-		drawbox(x1, y1, x2, y2, ' ', ' ', 0x00000000, 0x00000000, 0x00000000, 0x00000000);
+		drawbox(x1, y1, x2, y2, ' ', ' ', normal_item_text_color, normal_item_back_color, normal_item_text_color, normal_item_back_color);
 
 		/* Show currently viewable items */
 		y = y1;
