@@ -1,5 +1,5 @@
 TARGET = template
-OBJS = main.o
+OBJS = main.o sml.o
 
 INCDIR = 
 CFLAGS = -O2 -G0 -Wall
