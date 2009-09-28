@@ -19,9 +19,9 @@
 
 u32 *sml_savescreen32(int x1, int y1, int x2, int y2) {
 	int x, y, i, j;
-	u32 color = 0xFFFFFFFF;
 
-	u32* save_buffer = malloc(sizeof(u32) * (x2 - x1 + 1) * (y2 - y1 + 1) * 8 * 8);
+	u32 *save_buffer = malloc(sizeof(u32) * (x2 - x1 + 1) * (y2 - y1 + 1) * 8 * 8);
+	u32 *sb = save_buffer;
 
 	if(!save_buffer) {
 		printf("Error allocating buffer\n");
@@ -38,8 +38,9 @@ u32 *sml_savescreen32(int x1, int y1, int x2, int y2) {
 			// 8x8 square
 			for(i = 0; i < 8; i++) {
 				for(j = 0; j < 8; j++) {
-					*save_buffer++ = *(vram + j);
-					*(vram + j) = color;
+					*sb = *(vram + j);
+					*(vram + j) = 0xFFFFFFFF;
+					sb++;
 				}
 
 				vram += 512; // PSP_LINE_SIZE
@@ -52,10 +53,13 @@ u32 *sml_savescreen32(int x1, int y1, int x2, int y2) {
 
 void sml_restorescreen32(int x1, int y1, int x2, int y2, u32 *save_buffer) {
 	int x, y, i, j;
+	u32 *sb;
 
 	if(!save_buffer) {
 		return;
 	}
+
+	sb = save_buffer;
 
 	u32 *base_vram = (u32 *) (0x40000000 | (u32) sceGeEdramGetAddr());
 	u32 *vram = base_vram;
@@ -67,7 +71,8 @@ void sml_restorescreen32(int x1, int y1, int x2, int y2, u32 *save_buffer) {
 			// 8x8 square
 			for(i = 0; i < 8; i++) {
 				for(j = 0; j < 8; j++) {
-					*(vram + j) = *save_buffer++;
+					*(vram + j) = *sb;
+					sb++;
 				}
 
 				vram += 512; // PSP_LINE_SIZE
@@ -137,6 +142,12 @@ int sml_menubox(int x1, int y1, int x2, int y2, char *options, int option_count,
 
 	/* Return value (the option index or -1 if cancelled by the user */
 	int retval = -1;
+
+	/* This will prevent auto-selecting an option if user keeps pressed a button */
+	do {
+		sceCtrlReadBufferPositive(&pad, 1);
+		old_pad = pad.Buttons;
+	} while(old_pad != 0);
 
 	/* Menu navigation main loop */
 	for(;;) {
