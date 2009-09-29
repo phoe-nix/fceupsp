@@ -96,6 +96,7 @@ char *filebrowser(char *initial_dir) {
 
 	for(;;) {
 		i = read_directory(current_dir);
+		sml_drawbox(0, 1, 67, 32, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
 		opt = sml_menubox(1, 2, 66, 31, &files_list[0][0], i, 256, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
 		if(opt < 0)
