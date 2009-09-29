@@ -20,7 +20,7 @@
 u32 *sml_savescreen32(int x1, int y1, int x2, int y2) {
 	int x, y, i, j;
 
-	u32 *save_buffer = malloc(sizeof(u32) * (x2 - x1 + 1) * (y2 - y1 + 1) * 8 * 8);
+	u32 *save_buffer = malloc(sizeof(u32) * (x2 - x1 + 1) * (y2 - y1 + 1) * 9 * 8);
 	u32 *sb = save_buffer;
 
 	if(!save_buffer) {
@@ -31,15 +31,14 @@ u32 *sml_savescreen32(int x1, int y1, int x2, int y2) {
 	u32 *base_vram = (u32 *) (0x40000000 | (u32) sceGeEdramGetAddr());
 	u32 *vram = base_vram;
 
-	for(x = x1; x <= x2; x++) {
+	for(x = x1; x <= x2 + 1 ; x++) {
 		for(y = y1; y <= y2; y++) {
-			vram = (base_vram + x * 8) + (512 * y * 8);
+			vram = (base_vram + x * 7) + (512 * y * 8);
 
-			// 8x8 square
 			for(i = 0; i < 8; i++) {
-				for(j = 0; j < 8; j++) {
+				for(j = 0; j < 7; j++) {
 					*sb = *(vram + j);
-					*(vram + j) = 0xFFFFFFFF;
+					//*(vram + j) = 0x00FF0000;
 					sb++;
 				}
 
@@ -64,13 +63,12 @@ void sml_restorescreen32(int x1, int y1, int x2, int y2, u32 *save_buffer) {
 	u32 *base_vram = (u32 *) (0x40000000 | (u32) sceGeEdramGetAddr());
 	u32 *vram = base_vram;
 
-	for(x = x1; x <= x2; x++) {
+	for(x = x1; x <= x2 + 1; x++) {
 		for(y = y1; y <= y2; y++) {
-			vram = (base_vram + x * 8) + (512 * y * 8);
+			vram = (base_vram + x * 7) + (512 * y * 8);
 
-			// 8x8 square
 			for(i = 0; i < 8; i++) {
-				for(j = 0; j < 8; j++) {
+				for(j = 0; j < 7; j++) {
 					*(vram + j) = *sb;
 					sb++;
 				}
@@ -252,14 +250,14 @@ int sml_confirmationbox(char *message) {
 	int retval = -1;
 	char options[2][4] = {"No ", "Yes"};
 
-	u32 *buffer = sml_savescreen32(message_x - 1, 14, message_x + strlen(message), 18);
+	u32 *buffer = sml_savescreen32(message_x - 2, 14, message_x + strlen(message) + 1, 18);
 
 	if(!buffer) {
 		return -1;
 	}
 
 	// Draw external border
-	sml_drawbox(message_x - 1, 14, message_x + strlen(message), 18, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+	sml_drawbox(message_x - 2, 14, message_x + strlen(message) + 1, 18, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
 
 	// Prints the message
 	pspDebugScreenSetXY(message_x, 15);
@@ -268,7 +266,7 @@ int sml_confirmationbox(char *message) {
 	// Draw menu
 	retval = sml_menubox(32, 16, 34, 17, &options[0][0], 2, 4, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
-	sml_restorescreen32(message_x - 1, 14, message_x + strlen(message), 18, buffer);
+	sml_restorescreen32(message_x - 2, 14, message_x + strlen(message) + 1, 18, buffer);
 
 	return retval;
 }
@@ -277,14 +275,14 @@ void sml_messagebox(char *message) {
 	int message_x = (68 - strlen(message)) / 2;
 	char options[1][3] = {"OK"};
 
-	u32 *buffer = sml_savescreen32(message_x - 1, 14, message_x + strlen(message), 17);
+	u32 *buffer = sml_savescreen32(message_x - 2, 14, message_x + strlen(message) + 1, 17);
 
 	if(!buffer) {
 		return;
 	}
 
 	// Draw external border
-	sml_drawbox(message_x - 1, 14, message_x + strlen(message), 17, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+	sml_drawbox(message_x - 2, 14, message_x + strlen(message) + 1, 17, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
 
 	// Prints the message
 	pspDebugScreenSetXY(message_x, 15);
@@ -293,5 +291,5 @@ void sml_messagebox(char *message) {
 	// Draw menu
 	sml_menubox(32, 16, 33, 16, &options[0][0], 1, 3, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
-	sml_restorescreen32(message_x - 1, 14, message_x + strlen(message), 17, buffer);
+	sml_restorescreen32(message_x - 2, 14, message_x + strlen(message) + 1, 17, buffer);
 }
