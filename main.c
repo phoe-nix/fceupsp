@@ -16,6 +16,7 @@
 #include <pspdebug.h>
 #include <pspctrl.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "sml.h"
 #include "filebrowser.h"
@@ -77,6 +78,19 @@ int main(int argc, char *argv[])
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
+	/* Get the full path to EBOOT.PBP. */
+	char psp_full_path[1024 + 1];
+	char *psp_eboot_path;
+
+	strncpy(psp_full_path, argv[0], sizeof(psp_full_path) - 1);
+	psp_full_path[sizeof(psp_full_path) - 1] = '\0';
+
+	psp_eboot_path = strrchr(psp_full_path, '/');
+	if (psp_eboot_path != NULL)
+	{
+		*(psp_eboot_path+1) = '\0';
+	}
+
 //	char options[5][20] = {"Abacate    ", "Melancia   ", "Abobora    ", "Pessego    ", "Alface     "};
 //
 //	pspDebugScreenSetXY(0, 6);
@@ -96,7 +110,7 @@ int main(int argc, char *argv[])
 //	sml_confirmationbox("Testando...");
 //
 //	sml_restorescreen32(0, 0, 12, 4, b);
-	filebrowser("ms0:/");
+	filebrowser(psp_full_path);
 
 
 	return 0;
