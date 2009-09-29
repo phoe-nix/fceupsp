@@ -97,7 +97,9 @@ char *filebrowser(char *initial_dir) {
 	for(;;) {
 		i = read_directory(current_dir);
 		sml_drawbox(0, 1, 67, 32, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
-		opt = sml_menubox(1, 2, 66, 31, &files_list[0][0], i, 256, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
+		pspDebugScreenSetXY(1, 2);
+		pspDebugScreenPrintf("Dir: %.61s", current_dir);
+		opt = sml_menubox(1, 3, 66, 31, &files_list[0][0], i, 256, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
 		if(opt < 0) {
 			if(sml_confirmationbox("Exit?")) {
