@@ -18,6 +18,7 @@
 #include <stdio.h>
 
 #include "sml.h"
+#include "filebrowser.h"
 
 /* Define the module info section */
 PSP_MODULE_INFO("template", 0, 1, 1);
@@ -76,25 +77,26 @@ int main(int argc, char *argv[])
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 
-	char options[5][20] = {"Abacate    ", "Melancia   ", "Abobora    ", "Pessego    ", "Alface     "};
-
-	pspDebugScreenSetXY(0, 6);
-	pspDebugScreenPrintf("012345678901234567890");
-
-	sml_drawbox(0, 0, 12, 4, ' ', ' ', 0x77777777, 0x77777777, 0x00000000, 0x00000000);
-	int option = sml_menubox(1, 1, 11, 3, &options[0][0], 5, 20, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
-
-	u32 *b = sml_savescreen32(0, 0, 12, 4);
-
-
-	pspDebugScreenSetXY(30, 14);
-	pspDebugScreenPrintf("%d", option);
-
-
-
-	sml_confirmationbox("Testando...");
-
-	sml_restorescreen32(0, 0, 12, 4, b);
+//	char options[5][20] = {"Abacate    ", "Melancia   ", "Abobora    ", "Pessego    ", "Alface     "};
+//
+//	pspDebugScreenSetXY(0, 6);
+//	pspDebugScreenPrintf("012345678901234567890");
+//
+//	sml_drawbox(0, 0, 12, 4, ' ', ' ', 0x77777777, 0x77777777, 0x00000000, 0x00000000);
+//	int option = sml_menubox(1, 1, 11, 3, &options[0][0], 5, 20, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
+//
+//	u32 *b = sml_savescreen32(0, 0, 12, 4);
+//
+//
+//	pspDebugScreenSetXY(30, 14);
+//	pspDebugScreenPrintf("%d", option);
+//
+//
+//
+//	sml_confirmationbox("Testando...");
+//
+//	sml_restorescreen32(0, 0, 12, 4, b);
+	filebrowser("ms0:/");
 
 
 	return 0;

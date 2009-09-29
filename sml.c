@@ -132,7 +132,7 @@ int sml_menubox(int x1, int y1, int x2, int y2, char *options, int option_count,
 
 	/* Construct the printf mask for delimited options output */
 	int max_item_width = x2 - x1 + 1;
-	sprintf(print_mask, "%%.%ds", max_item_width);
+	sprintf(print_mask, "%%-%d.%ds", max_item_width, max_item_width);
 
 	/* Menu navigation/printing variables */
 	int y;
