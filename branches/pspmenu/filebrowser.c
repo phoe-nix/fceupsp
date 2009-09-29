@@ -102,7 +102,7 @@ char *filebrowser(char *initial_dir) {
 		opt = sml_menubox(1, 3, 66, 31, &files_list[0][0], i, 256, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
 		if(opt < 0) {
-			if(sml_confirmationbox("Exit?")) {
+			if(sml_confirmationbox("Exit?") == 1) {
 				return NULL;
 			}
 
