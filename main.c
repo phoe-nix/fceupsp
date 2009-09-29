@@ -86,31 +86,14 @@ int main(int argc, char *argv[])
 	psp_full_path[sizeof(psp_full_path) - 1] = '\0';
 
 	psp_eboot_path = strrchr(psp_full_path, '/');
-	if (psp_eboot_path != NULL)
-	{
+	if(psp_eboot_path != NULL) {
 		*(psp_eboot_path+1) = '\0';
 	}
 
-//	char options[5][20] = {"Abacate    ", "Melancia   ", "Abobora    ", "Pessego    ", "Alface     "};
-//
-//	pspDebugScreenSetXY(0, 6);
-//	pspDebugScreenPrintf("012345678901234567890");
-//
-//	sml_drawbox(0, 0, 12, 4, ' ', ' ', 0x77777777, 0x77777777, 0x00000000, 0x00000000);
-//	int option = sml_menubox(1, 1, 11, 3, &options[0][0], 5, 20, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
-//
-//	u32 *b = sml_savescreen32(0, 0, 12, 4);
-//
-//
-//	pspDebugScreenSetXY(30, 14);
-//	pspDebugScreenPrintf("%d", option);
-//
-//
-//
-//	sml_confirmationbox("Testando...");
-//
-//	sml_restorescreen32(0, 0, 12, 4, b);
-	filebrowser(psp_full_path);
+	char *filename = filebrowser(psp_full_path);
+
+	if(filename)
+		printf("%s\n", filename);
 
 
 	return 0;
