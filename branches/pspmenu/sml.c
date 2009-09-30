@@ -147,31 +147,37 @@ int sml_menubox(int x1, int y1, int x2, int y2, char *options, int option_count,
 		old_pad = pad.Buttons;
 	} while(old_pad != 0);
 
+	int need_refresh = 1;
+
 	/* Menu navigation main loop */
 	for(;;) {
-		/* Clear region */
-		sml_drawbox(x1, y1, x2, y2, ' ', ' ', normal_item_text_color, normal_item_back_color, normal_item_text_color, normal_item_back_color);
 
-		/* Show currently viewable items */
-		y = y1;
+		if(need_refresh) {
+			/* Clear region */
+			sml_drawbox(x1, y1, x2, y2, ' ', ' ', normal_item_text_color, normal_item_back_color, normal_item_text_color, normal_item_back_color);
 
-		for(item = first_viewable_item; item <= ((last_viewable_item >= option_count)?option_count-1:last_viewable_item); item++) {
-			/* "Line feed" */
-			pspDebugScreenSetXY(x1, y);
+			/* Show currently viewable items */
+			y = y1;
 
-			/* Highlights the selected item. Doesn't highlight the other ones */
-			if(item == curr_item) {
-				pspDebugScreenSetBackColor(selected_item_back_color);
-				pspDebugScreenSetTextColor(selected_item_text_color);
-			} else {
-				pspDebugScreenSetBackColor(normal_item_back_color);
-				pspDebugScreenSetTextColor(normal_item_text_color);
+			for(item = first_viewable_item; item <= ((last_viewable_item >= option_count)?option_count-1:last_viewable_item); item++) {
+				/* "Line feed" */
+				pspDebugScreenSetXY(x1, y);
+
+				/* Highlights the selected item. Doesn't highlight the other ones */
+				if(item == curr_item) {
+					pspDebugScreenSetBackColor(selected_item_back_color);
+					pspDebugScreenSetTextColor(selected_item_text_color);
+				} else {
+					pspDebugScreenSetBackColor(normal_item_back_color);
+					pspDebugScreenSetTextColor(normal_item_text_color);
+				}
+
+				/* Print the menu option */
+				pspDebugScreenPrintf(print_mask, (options + item * option_max_width));
+
+				y++;
 			}
 
-			/* Print the menu option */
-			pspDebugScreenPrintf(print_mask, (options + item * option_max_width));
-
-			y++;
 		}
 
 		/* Checks for user selection. Created this label (Ugh!) to avoid menu flickering */
@@ -185,6 +191,8 @@ read_pad:
 			old_pad = 0;
 			goto read_pad;
 		}
+
+		need_refresh = 0;
 
 		if(clock() > rpt_time || old_pad != pad_data) {
 
@@ -208,6 +216,8 @@ read_pad:
 //					first_viewable_item = option_count - 1;
 //					last_viewable_item = option_count - 1;
 //				}
+
+				need_refresh = 1;
 			}
 
 			if (pad_data & PSP_CTRL_DOWN) {
@@ -223,6 +233,8 @@ read_pad:
 //					first_viewable_item = 0;
 //					last_viewable_item = first_viewable_item + how_many_items_can_show - 1;
 //				}
+
+				need_refresh = 1;
 			}
 
 			if (pad_data & PSP_CTRL_CROSS) {
