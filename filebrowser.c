@@ -42,10 +42,16 @@ void one_dir_up() {
 	}
 }
 
-int is_file( const char *filename) {
+int is_file(const char *filename) {
 	SceIoStat stats;
+	char tmp[1024];
 
-	sceIoGetstat(filename, &stats);
+	strcpy(tmp, filename);
+
+	if(tmp[strlen(tmp)-1] == '/')
+		tmp[strlen(tmp)-1] = 0;
+
+	sceIoGetstat(tmp, &stats);
 
 	if (stats.st_mode & FIO_S_IFDIR)
 		return 0;
@@ -72,7 +78,10 @@ int read_directory(char *directory) {
 	memset(&dir, 0, sizeof(SceIoDirent));
 
 	while (sceIoDread(dfd, &dir) > 0) {
-		if ((dir.d_stat.st_attr & FIO_SO_IFDIR) && (dir.d_name[0] != '.')) {
+		if(dir.d_name[0] == '.')
+			continue;
+
+		if ((dir.d_stat.st_attr & FIO_SO_IFDIR)) {
 			sprintf(files_list[i++], "%s/", dir.d_name);
 		} else {
 			strcpy(files_list[i++], dir.d_name);
@@ -96,9 +105,9 @@ char *filebrowser(char *initial_dir) {
 
 	for(;;) {
 		i = read_directory(current_dir);
-		sml_drawbox(0, 1, 67, 32, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+		//sml_drawbox(0, 1, 67, 32, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
 		pspDebugScreenSetXY(1, 2);
-		pspDebugScreenPrintf("Dir: %.61s", current_dir);
+		pspDebugScreenPrintf("Dir: %-61.61s", current_dir);
 		opt = sml_menubox(1, 3, 66, 31, &files_list[0][0], i, 256, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
 		if(opt < 0) {

@@ -90,7 +90,8 @@ int main(int argc, char *argv[])
 		*(psp_eboot_path+1) = '\0';
 	}
 
-	char *filename = filebrowser(psp_full_path);
+	//char *filename = filebrowser(psp_full_path);
+	char *filename = filebrowser("ms0:/");
 
 	if(filename)
 		printf("%s\n", filename);
