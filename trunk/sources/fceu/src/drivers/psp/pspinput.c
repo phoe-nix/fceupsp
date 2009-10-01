@@ -21,9 +21,6 @@ void PSPInputInitPads() {
 	NESPads = &NESButtons;
 	FCEUI_SetInput(0, SI_GAMEPAD, NESPads, attrib);
 	FCEUI_SetInput(1, SI_GAMEPAD, NESPads, attrib);
-
-	sceCtrlSetSamplingCycle(0);
-	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
 }
 
 void PSPInputReadPad() {
