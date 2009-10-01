@@ -65,6 +65,7 @@ int main(int argc, char *argv[])
 #endif
 
     FCEUGI *tmp;
+    char *filename;
 
 	/* Get the full path to EBOOT.PBP. */
 	char psp_full_path[1024 + 1];
@@ -84,7 +85,13 @@ int main(int argc, char *argv[])
 	for(;;) {
     	mainscreen();
 
-    	if((tmp=FCEUI_LoadGame(filebrowser("ms0:/")))) {
+    	//filename = filebrowser("ms0:/");
+    	filename = filebrowser(psp_full_path);
+
+    	if(filename == NULL)
+    		break;
+
+    	if((tmp=FCEUI_LoadGame(filename))) {
     		printf("Game Loaded!\n");
     		CurGame=tmp;
     	}
