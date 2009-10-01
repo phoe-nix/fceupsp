@@ -43,17 +43,7 @@ void one_dir_up() {
 }
 
 int is_file(const char *filename) {
-	SceIoStat stats;
-	char tmp[1024];
-
-	strcpy(tmp, filename);
-
-	if(tmp[strlen(tmp)-1] == '/')
-		tmp[strlen(tmp)-1] = 0;
-
-	sceIoGetstat(tmp, &stats);
-
-	if (stats.st_mode & FIO_S_IFDIR)
+	if(filename[strlen(filename)-1] == '/')
 		return 0;
 	else
 		return 1;
@@ -105,7 +95,8 @@ char *filebrowser(char *initial_dir) {
 
 	for(;;) {
 		i = read_directory(current_dir);
-		//sml_drawbox(0, 1, 67, 32, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+		pspDebugScreenSetTextColor(0xFFFFFFFF);
+		pspDebugScreenSetBackColor(0x00000000);
 		pspDebugScreenSetXY(1, 2);
 		pspDebugScreenPrintf("Dir: %-61.61s", current_dir);
 		opt = sml_menubox(1, 3, 66, 31, &files_list[0][0], i, 256, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
