@@ -1,7 +1,8 @@
 TARGET = fceu-psp
 
 DRIVERS_OBJS = src/drivers/psp/main.o src/drivers/psp/pspvideo.o src/drivers/psp/pspinput.o \
-src/drivers/psp/vram.o src/drivers/psp/file_browser.o src/drivers/psp/pspaudio.o
+src/drivers/psp/vram.o src/drivers/psp/filebrowser.o src/drivers/psp/pspaudio.o \
+src/drivers/psp/sml.o
 
 BASE_OBJS = src/cart.o src/cheat.o src/crc32.o src/debug.o src/endian.o \
 src/fceu.o src/fceustr.o src/fds.o src/file.o src/filter.o src/general.o \
