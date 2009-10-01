@@ -90,6 +90,21 @@ int main(int argc, char *argv[])
 		*(psp_eboot_path+1) = '\0';
 	}
 
+	pspDebugScreenSetXY(0, 0);
+	pspDebugScreenSetTextColor(0xFF00FFFF);
+	pspDebugScreenSetBackColor(0xFFFF0000);
+	pspDebugScreenPrintf("%-68.68s", " FCEU-PSP - FCEUltra for PSP (Alpha)");
+	pspDebugScreenSetXY(0, 1);
+	pspDebugScreenPrintf("(C)2009 - bootsector@ig.com.br");
+	sml_drawbox(0, 1, 67, 31, ' ', ' ', 0xFFFF0000, 0xFFFF0000, 0x00000000, 0x00000000);
+	pspDebugScreenSetXY(0, 1);
+	pspDebugScreenSetTextColor(0xFF00FFFF);
+	pspDebugScreenSetBackColor(0xFFFF0000);
+	pspDebugScreenPrintf(" (C)2009 - bootsector@ig.com.br");
+	pspDebugScreenSetXY(0, 32);
+	pspDebugScreenSetTextColor(0xFF00FFFF);
+	pspDebugScreenSetBackColor(0xFFFF0000);
+	pspDebugScreenPrintf(" X-Select O-Exit");
 	//char *filename = filebrowser(psp_full_path);
 	char *filename = filebrowser("ms0:/");
 

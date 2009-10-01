@@ -269,7 +269,7 @@ int sml_confirmationbox(char *message) {
 	}
 
 	// Draw external border
-	sml_drawbox(message_x - 2, 14, message_x + strlen(message) + 1, 18, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+	sml_drawbox(message_x - 2, 14, message_x + strlen(message) + 1, 18, ' ', ' ', 0xFF0000FF, 0xFF0000FF, 0x00000000, 0x00000000);
 
 	// Prints the message
 	pspDebugScreenSetXY(message_x, 15);
@@ -294,7 +294,7 @@ void sml_messagebox(char *message) {
 	}
 
 	// Draw external border
-	sml_drawbox(message_x - 2, 14, message_x + strlen(message) + 1, 17, ' ', ' ', 0xFFFFFFFF, 0xFFFFFFFF, 0x00000000, 0x00000000);
+	sml_drawbox(message_x - 2, 14, message_x + strlen(message) + 1, 17, ' ', ' ', 0xFF0000FF, 0xFF0000FF, 0x00000000, 0x00000000);
 
 	// Prints the message
 	pspDebugScreenSetXY(message_x, 15);
