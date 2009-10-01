@@ -10,6 +10,7 @@
 char files_list[MAX_FILES][256];
 char current_dir[1024];
 char file_name[1024];
+int current_dir_set = 0;
 
 void one_dir_up() {
 	char tmp[1024];
@@ -89,7 +90,10 @@ int read_directory(char *directory) {
 char *filebrowser(char *initial_dir) {
 	int i, opt;
 
-	strcpy(current_dir, initial_dir);
+	if(!current_dir_set) {
+		strcpy(current_dir, initial_dir);
+		current_dir_set = 1;
+	}
 
 	memset(file_name, 0, 1024);
 
