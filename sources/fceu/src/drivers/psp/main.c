@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <psppower.h>
 #include <pspgu.h>
+#include <string.h>
+#include <pspctrl.h>
 
 #include "../../types.h"
 #include "../../driver.h"
@@ -11,7 +13,8 @@
 #include "pspinput.h"
 #include "pspaudio.h"
 #include "vram.h"
-#include "file_browser.h"
+#include "sml.h"
+#include "filebrowser.h"
 
 #define SOUND_ENABLED
 
@@ -28,6 +31,7 @@ FCEUGI *CurGame = NULL;
 int endgame = 0;
 void DoFun();
 int SetupCallbacks(void);
+void mainscreen();
 
 int main(int argc, char *argv[])
 {
@@ -62,8 +66,25 @@ int main(int argc, char *argv[])
 
     FCEUGI *tmp;
 
-    for(;;) {
-    	if((tmp=FCEUI_LoadGame(file_browser("ms0:/")))) {
+	/* Get the full path to EBOOT.PBP. */
+	char psp_full_path[1024 + 1];
+	char *psp_eboot_path;
+
+	strncpy(psp_full_path, argv[0], sizeof(psp_full_path) - 1);
+	psp_full_path[sizeof(psp_full_path) - 1] = '\0';
+
+	psp_eboot_path = strrchr(psp_full_path, '/');
+	if(psp_eboot_path != NULL) {
+		*(psp_eboot_path+1) = '\0';
+	}
+
+	sceCtrlSetSamplingCycle(0);
+	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
+
+	for(;;) {
+    	mainscreen();
+
+    	if((tmp=FCEUI_LoadGame(filebrowser("ms0:/")))) {
     		printf("Game Loaded!\n");
     		CurGame=tmp;
     	}
@@ -72,15 +93,15 @@ int main(int argc, char *argv[])
     		continue;
     	}
 
-    	PSPInputInitPads();
+    	pspDebugScreenClear();
 
+        PSPInputInitPads();
     	PSPVideoOverrideNESClut();
 
 #ifdef SOUND_ENABLED
     	PSPAudioPlay();
 #endif
 
-    	printf("Before main loop\n");
     	while(CurGame) {//FCEUI_CloseGame turns this false
     		DoFun();
     	}
@@ -100,6 +121,28 @@ int main(int argc, char *argv[])
 	sceKernelExitGame();
 
 	return 0;
+}
+
+void mainscreen() {
+	/* Draw main screen */
+    pspDebugScreenInit();
+
+	pspDebugScreenClear();
+	pspDebugScreenSetXY(0, 0);
+	pspDebugScreenSetTextColor(0xFF00FFFF);
+	pspDebugScreenSetBackColor(0xFFFF0000);
+	pspDebugScreenPrintf("%-68.68s", " FCEU-PSP - FCEUltra for PSP (Alpha)");
+	pspDebugScreenSetXY(0, 1);
+	pspDebugScreenPrintf("(C)2009 - bootsector@ig.com.br");
+	sml_drawbox(0, 1, 67, 31, ' ', ' ', 0xFFFF0000, 0xFFFF0000, 0x00000000, 0x00000000);
+	pspDebugScreenSetXY(0, 1);
+	pspDebugScreenSetTextColor(0xFF00FFFF);
+	pspDebugScreenSetBackColor(0xFFFF0000);
+	pspDebugScreenPrintf(" (C)2009 - bootsector@ig.com.br");
+	pspDebugScreenSetXY(0, 32);
+	pspDebugScreenSetTextColor(0xFF00FFFF);
+	pspDebugScreenSetBackColor(0xFFFF0000);
+	pspDebugScreenPrintf(" X-Select O-Exit");
 }
 
 void FCEUD_Update(uint8 *XBuf, int32 *tmpsnd, int32 ssize)
