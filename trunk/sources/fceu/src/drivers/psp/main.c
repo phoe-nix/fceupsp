@@ -35,11 +35,30 @@ void mainscreen();
 
 int main(int argc, char *argv[])
 {
+    FCEUGI *tmp;
+    char *filename;
+
 	SetupCallbacks();
 
 	sceKernelDcacheWritebackAll();
 
 	scePowerSetClockFrequency(333, 333, 166);
+
+	/* Get the full path to EBOOT.PBP. */
+	char psp_full_path[1024 + 1];
+	char *psp_eboot_path;
+
+	strncpy(psp_full_path, argv[0], sizeof(psp_full_path) - 1);
+	psp_full_path[sizeof(psp_full_path) - 1] = '\0';
+
+	psp_eboot_path = strrchr(psp_full_path, '/');
+	if(psp_eboot_path != NULL) {
+		*(psp_eboot_path+1) = '\0';
+	}
+
+    if(strncmp(psp_full_path, "ms0:/", 5) != 0) {
+    	strcpy(psp_full_path, "ms0:/");
+    }
 
     PSPVideoInit();
 
@@ -47,6 +66,9 @@ int main(int argc, char *argv[])
 		printf("FCEUltra did not initialize.\n");
 		return(0);
 	}
+
+    FCEUI_SetBaseDirectory(psp_full_path);
+
 
 	FCEUI_SetVidSystem(0); // 0 - NTSC
 	FCEUI_SetGameGenie(0);
@@ -64,20 +86,7 @@ int main(int argc, char *argv[])
     PSPAudioInit();
 #endif
 
-    FCEUGI *tmp;
-    char *filename;
 
-	/* Get the full path to EBOOT.PBP. */
-	char psp_full_path[1024 + 1];
-	char *psp_eboot_path;
-
-	strncpy(psp_full_path, argv[0], sizeof(psp_full_path) - 1);
-	psp_full_path[sizeof(psp_full_path) - 1] = '\0';
-
-	psp_eboot_path = strrchr(psp_full_path, '/');
-	if(psp_eboot_path != NULL) {
-		*(psp_eboot_path+1) = '\0';
-	}
 
 	sceCtrlSetSamplingCycle(0);
 	sceCtrlSetSamplingMode(PSP_CTRL_MODE_ANALOG);
@@ -85,7 +94,6 @@ int main(int argc, char *argv[])
 	for(;;) {
     	mainscreen();
 
-    	//filename = filebrowser("ms0:/");
     	filename = filebrowser(psp_full_path);
 
     	if(filename == NULL)
