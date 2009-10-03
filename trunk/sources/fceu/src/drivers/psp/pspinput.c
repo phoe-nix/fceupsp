@@ -6,11 +6,10 @@
 #include "../../driver.h"
 #include "../../fceu.h"
 #include "pspvideo.h"
+#include "menugame.h"
 
 int NESButtons;
 SceCtrlData pad;
-
-extern int endgame;
 
 void PSPInputInitPads() {
     void *NESPads;
@@ -71,7 +70,7 @@ void PSPInputReadPad() {
 			//printf("Select pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_LTRIGGER){
-			endgame = 1;
+			menugame();
 			//printf("L-trigger pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_RTRIGGER){
