@@ -13,18 +13,19 @@ extern int endgame;
 
 int select_save() {
 	char options[10][2] = {"0", "1", "2", "3", "4", "5", "6", "7", "8", "9"};
-	u32 *screen;
+	//u32 *screen;
 	int s;
 
-	screen = sml_savescreen32(38, 13, 40, 17);
+	//screen = sml_savescreen32(38, 13, 40, 17);
 
 	sml_drawbox(38, 13, 40, 17, ' ', ' ', 0xFFFF0000, 0xFFFF0000, 0x00000000, 0x00000000);
 	s = sml_menubox(39, 14, 39, 16, &options[0][0], 10, 2, save_state_slot, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
+	// TODO: Check why code below was giving an exception
+	//sml_restorescreen32(38, 13, 40, 17, screen);
+
 	if(s < 0)
 		s = save_state_slot;
-
-	sml_restorescreen32(38, 13, 40, 17, screen);
 
 	return s;
 }
@@ -42,24 +43,27 @@ void menugame() {
 
     pspDebugScreenInit();
 
-	pspDebugScreenClear();
-
 	screen = sml_savescreen32(19, 13, 37, 20);
 
 	for(;;) {
+		pspDebugScreenClear();
+
 		sml_drawbox(19, 13, 37, 20, ' ', ' ', 0xFFFF0000, 0xFFFF0000, 0x00000000, 0x00000000);
 		s = sml_menubox(20, 14, 36, 19, &options[0][0], 6, 18, 0, 0xFFFFFFFF, 0x00000000, 0x00000000, 0xFFFFFFFF);
 
 		if(s == 0) {
 			save_state_slot = select_save();
 			FCEUI_SelectState(save_state_slot);
+			//FCEUI_SelectState(0);
 		}
 		else if(s == 1) {
-			FCEUI_SaveState(NULL);
+			if(sml_confirmationbox("Confirm save state?") == 1)
+				FCEUI_SaveState(NULL);
 			break;
 		}
 		else if(s == 2) {
-			FCEUI_LoadState(NULL);
+			if(sml_confirmationbox("Confirm loading save state?") == 1)
+				FCEUI_LoadState(NULL);
 			break;
 		}
 		else if(s == 3) {
@@ -68,6 +72,7 @@ void menugame() {
 		}
 		else if(s == 4) {
 			endgame = 1;
+			save_state_slot = 0;
 			break;
 		}
 		else {

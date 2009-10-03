@@ -7,6 +7,7 @@
 #include "../../fceu.h"
 #include "pspvideo.h"
 #include "menugame.h"
+#include "pspaudio.h"
 
 int NESButtons;
 SceCtrlData pad;
@@ -70,7 +71,9 @@ void PSPInputReadPad() {
 			//printf("Select pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_LTRIGGER){
+			PSPAudioStop();
 			menugame();
+			PSPAudioPlay();
 			//printf("L-trigger pressed \n");
 		}
 		if (pad.Buttons & PSP_CTRL_RTRIGGER){
