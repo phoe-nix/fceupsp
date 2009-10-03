@@ -21,7 +21,8 @@ int end = 0;
 int chan = -1;
 int added_some_data = 0;
 
-SceUID can_play;
+//SceUID can_play;
+int can_play = 0;
 SceUID new_thid;
 
 
@@ -83,25 +84,26 @@ void PSPAudioPlayThread() {
 	sceKernelWaitSema(can_play, 1, 0);
 
 	for(;;) {
-//		if(sceKernelPollSema(can_play, 1) < 0) {
-//			sceKernelSleepThread();
-//			continue;
-//		}
+		if(can_play) {
+			PSPAudioGetSamples(s, CHUNK_LEN);
 
-		PSPAudioGetSamples(s, CHUNK_LEN);
-
-		sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, s);
-		//printf("Available samples: %d\n", PSPAudioGetAvailableSamples());
+			sceAudioOutputBlocking(chan, PSP_AUDIO_VOLUME_MAX, s);
+			//printf("Available samples: %d\n", PSPAudioGetAvailableSamples());
+		} else {
+			sceKernelDelayThread(0);
+		}
 	}
 }
 
 void PSPAudioStop() {
-	sceKernelSignalSema(can_play, 0);
+	//sceKernelSignalSema(can_play, -1);
+	can_play = 0;
 }
 
 void PSPAudioPlay() {
-	sceKernelSignalSema(can_play, 1);
+	//sceKernelSignalSema(can_play, 1);
 //	sceKernelWakeupThread(new_thid);
+	can_play = 1;
 }
 
 void PSPAudioReset() {
@@ -116,7 +118,8 @@ void PSPAudioInit() {
 
 	chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(CHUNK_LEN), PSP_AUDIO_FORMAT_MONO);
 
-	can_play = sceKernelCreateSema("can_play", 0, 0, 1, 0);
+	//can_play = sceKernelCreateSema("can_play", 0, 0, 1, 0);
+	can_play = 0;
 
 	new_thid = sceKernelCreateThread("audio_thread",(SceKernelThreadEntry) PSPAudioPlayThread, 0x12, 0x10000, 0, 0);
 
@@ -134,6 +137,6 @@ void PSPAudioFinish() {
 	sceKernelTerminateThread(new_thid);
 	sceKernelWaitThreadEnd(new_thid,NULL);
 	sceKernelDeleteThread(new_thid);
-	sceKernelDeleteSema(can_play);
+	//sceKernelDeleteSema(can_play);
 	sceAudioChRelease(chan);
 }

@@ -24,8 +24,8 @@ PSP_MODULE_INFO("fceu-psp", 0, 1, 1);
 /* Define the main thread's attribute value (optional) */
 PSP_MAIN_THREAD_ATTR(THREAD_ATTR_USER | THREAD_ATTR_VFPU);
 
-// Sets new HEAP size for PRX (10MB)
-PSP_HEAP_SIZE_KB(10 * 1024);
+// Sets new HEAP size for PRX (15MB)
+PSP_HEAP_SIZE_KB(15 * 1024);
 
 FCEUGI *CurGame = NULL;
 int endgame = 0;
@@ -146,14 +146,12 @@ void mainscreen() {
 	pspDebugScreenSetXY(0, 0);
 	pspDebugScreenSetTextColor(0xFF00FFFF);
 	pspDebugScreenSetBackColor(0xFFFF0000);
-	pspDebugScreenPrintf("%-68.68s", " FCEU-PSP - FCEUltra for PSP (Alpha)");
-	pspDebugScreenSetXY(0, 1);
-	pspDebugScreenPrintf("(C)2009 - bootsector@ig.com.br");
+	pspDebugScreenPrintf("%-68.68s", " FCEU-PSP - FCEUltra for PSP v0.1");
 	sml_drawbox(0, 1, 67, 31, ' ', ' ', 0xFFFF0000, 0xFFFF0000, 0x00000000, 0x00000000);
-	pspDebugScreenSetXY(0, 1);
+	pspDebugScreenSetXY(37, 32);
 	pspDebugScreenSetTextColor(0xFF00FFFF);
 	pspDebugScreenSetBackColor(0xFFFF0000);
-	pspDebugScreenPrintf(" (C)2009 - bootsector@ig.com.br");
+	pspDebugScreenPrintf("(C)2009 - bootsector@ig.com.br");
 	pspDebugScreenSetXY(0, 32);
 	pspDebugScreenSetTextColor(0xFF00FFFF);
 	pspDebugScreenSetBackColor(0xFFFF0000);

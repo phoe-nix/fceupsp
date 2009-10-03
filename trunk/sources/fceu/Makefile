@@ -58,6 +58,7 @@ LIBS = -lz -lm -lpspgu -lpsppower -lpspaudiolib -lpspaudio
 
 EXTRA_TARGETS = EBOOT.PBP
 PSP_EBOOT_TITLE = FCEU-PSP
+PSP_EBOOT_ICON = icon.png
 
 PSPSDK=$(shell psp-config --pspsdk-path)
 include $(PSPSDK)/lib/build.mak
