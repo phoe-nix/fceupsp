@@ -26,4 +26,22 @@ TODO:
 :. Add pad turbo support
 :. Improve video render speed/quality
 
+Controls:
+
+During ROM selection screen:
+
+:. UP and DOWN: Move around the filesystem.
+:. X: Select ROM
+:. O: Quit emulator
+
+During gameplay:
+
+:. UP, DOWN, LEFT and RIGHT: NES D-PAD
+:. []: NES B button
+:. X: NES A button
+:. Select: NES Select button
+:. Start: NES Start button
+:. L: In-Game menu
+:. R: Toggle screen size
+
 Have fun!
