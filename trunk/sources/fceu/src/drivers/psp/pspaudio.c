@@ -59,11 +59,11 @@ void PSPAudioPlay() {
 }
 
 void PSPAudioReset() {
-	sfifo_init(&sound_fifo, BUF_LEN);
+	sfifo_flush(&sound_fifo);
 }
 
 void PSPAudioInit() {
-	sfifo_init(&sound_fifo, BUF_LEN);
+	sfifo_init(&sound_fifo, BUF_LEN * 2);
 
 	chan = sceAudioChReserve(PSP_AUDIO_NEXT_CHANNEL, PSP_AUDIO_SAMPLE_ALIGN(CHUNK_LEN), PSP_AUDIO_FORMAT_MONO);
 
@@ -86,4 +86,5 @@ void PSPAudioFinish() {
 	sceKernelWaitThreadEnd(new_thid,NULL);
 	sceKernelDeleteThread(new_thid);
 	sceAudioChRelease(chan);
+	sfifo_close(&sound_fifo);
 }
