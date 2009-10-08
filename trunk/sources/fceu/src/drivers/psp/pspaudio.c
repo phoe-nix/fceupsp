@@ -38,8 +38,6 @@ void PSPAudioGetSamples(u16 *samples, int32 count) {
 void PSPAudioPlayThread() {
 	u16 s[CHUNK_LEN];
 
-	sceKernelWaitSema(can_play, 1, 0);
-
 	for(;;) {
 		if(can_play) {
 			PSPAudioGetSamples(s, CHUNK_LEN);
