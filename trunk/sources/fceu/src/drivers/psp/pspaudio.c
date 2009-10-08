@@ -33,9 +33,21 @@ int PSPAudioGetAvailableSamples() {
 	return (BUF_LEN + end - start) % BUF_LEN;
 }
 
+int PSPAudioGetAvailableSpace() {
+//	if(start == end)
+//		return 0;
+
+	return (BUF_LEN - PSPAudioGetAvailableSamples());
+}
+
+
 void PSPAudioAddSamples(u16 *samples, int32 count) {
 	int i, real_i;
 	int overwritten = 0;
+	int free_space = PSPAudioGetAvailableSpace();
+
+	if(count > free_space)
+		count = free_space;
 
 	for(i = 0; i < count; i++) {
 		real_i = (i + end) % BUF_LEN;
@@ -57,21 +69,21 @@ void PSPAudioAddSamples(u16 *samples, int32 count) {
 
 void PSPAudioGetSamples(u16 *samples, int32 count) {
 	int i;
-	u16 last_sample = 0;
-	int samples_available;
+//	u16 last_sample = 0;
+	int samples_available = PSPAudioGetAvailableSamples();
+
 	memset(samples, 0, sizeof(u16) * count);
 
-	if((samples_available = PSPAudioGetAvailableSamples()) < count)
-		//                return;
-		printf("No samples available. Req.: %d Avail.: %d\n", count, samples_available);
+	if(count > samples_available)
+		count = samples_available;
 
 	for(i = 0; i < count; i++) {
-		if(i < samples_available) {
+//		if(i < samples_available) {
 			samples[i] = audio_buffer[(i + start) % BUF_LEN];
-			last_sample = 0;
-		} else {
-			samples[i] = last_sample;
-		}
+//			last_sample = 0;
+//		} else {
+//			samples[i] = last_sample;
+//		}
 	}
 
 	start = (count + start) % BUF_LEN;

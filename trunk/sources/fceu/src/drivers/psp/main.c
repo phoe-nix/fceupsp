@@ -146,7 +146,7 @@ void mainscreen() {
 	pspDebugScreenSetXY(0, 0);
 	pspDebugScreenSetTextColor(0xFF00FFFF);
 	pspDebugScreenSetBackColor(0xFFFF0000);
-	pspDebugScreenPrintf("%-68.68s", " FCEU-PSP - FCEUltra for PSP v0.1");
+	pspDebugScreenPrintf("%-68.68s", " FCEU-PSP - FCEUltra for PSP v0.2 WIP");
 	sml_drawbox(0, 1, 67, 31, ' ', ' ', 0xFFFF0000, 0xFFFF0000, 0x00000000, 0x00000000);
 	pspDebugScreenSetXY(37, 32);
 	pspDebugScreenSetTextColor(0xFF00FFFF);
