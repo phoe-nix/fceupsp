@@ -51,7 +51,7 @@ v0.3
 :. Changed codebase from FCEUltra 0.98.12 to FCEUltra Mappers Modified (jun16-2006)
 :. Mappers compatibility increased (thanks to the fceumm codebase update)
 :. Mapper 163/164 bugfixed based on FCEUX sources (FF7 Remake is now playable)
-:. Improve the menu rendering a little
+:. Improved the menu rendering a little
 
 v0.1
 
